@@ -374,6 +374,37 @@ export function describe({ name = '', mime = '', bytes, size } = {}) {
   };
 }
 
+/** Coarse kind implied by a MIME type alone, or null if it says nothing useful. */
+export function kindFromMime(mime) {
+  const m = String(mime || '').split(';')[0].trim().toLowerCase();
+  if (!m || GENERIC_MIME.has(m)) return null;
+  if (m.startsWith('image/')) return Kind.IMAGE;
+  if (m.startsWith('audio/')) return Kind.AUDIO;
+  if (m.startsWith('video/')) return Kind.VIDEO;
+  if (m.startsWith('font/')) return Kind.FONT;
+  if (m === 'application/pdf') return Kind.PDF;
+  if (m === 'application/json') return Kind.JSON;
+  if (m === 'text/markdown') return Kind.MARKDOWN;
+  if (m === 'text/csv' || m === 'text/tab-separated-values') return Kind.CSV;
+  if (m === 'text/html') return Kind.HTML;
+  if (m.startsWith('text/')) return Kind.TEXT;
+  return null;
+}
+
+/**
+ * Should we read the file's leading bytes before picking a viewer?
+ *
+ * Magic bytes outrank the filename, but reading them costs a download for a
+ * remote URL — so only pay that price when it can actually change the outcome:
+ * when the bytes are already local (free), or when the server's Content-Type
+ * disagrees with the extension about what this file even is.
+ */
+export function shouldPreSniff(source) {
+  if (source.blob) return true;
+  const declared = kindFromMime(source.declaredMime);
+  return Boolean(declared && declared !== source.kind);
+}
+
 /** Human-readable byte count. */
 export function formatBytes(n) {
   if (n == null || !Number.isFinite(n)) return '';

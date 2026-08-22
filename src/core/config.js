@@ -14,6 +14,14 @@ const config = {
   pdfWorkerSrc: null,
 
   /**
+   * Where pdf.js finds its CMap and standard-font data. Both default to a
+   * version-pinned CDN. Point them at local copies for offline or CSP setups —
+   * without standard font data, PDFs using Helvetica/Times render blank text.
+   */
+  pdfCMapUrl: null,
+  pdfStandardFontDataUrl: null,
+
+  /**
    * Allow the "Open in Microsoft Office viewer" fallback for Office files.
    * It works only for publicly reachable URLs and sends the URL to Microsoft,
    * so it is offered as an explicit user action, never used automatically.

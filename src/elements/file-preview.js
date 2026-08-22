@@ -12,7 +12,7 @@ import { toSource, Source } from '../core/source.js';
 import { resolveViewer } from '../core/registry.js';
 import { getConfig } from '../core/config.js';
 import { toPreviewError, PreviewError } from '../core/errors.js';
-import { formatBytes } from '../core/mime.js';
+import { formatBytes, shouldPreSniff } from '../core/mime.js';
 
 const sheet = makeStyles(css);
 
@@ -27,8 +27,11 @@ export class FilePreviewElement extends HTMLElement {
   static observedAttributes = ['src', 'name', 'type', 'theme', 'toolbar', 'download'];
 
   #root;
+  #stageHost;
   #stage;
+  #controls;
   #toolbar;
+  #leadSlot;
   #titleEl;
   #subtitleEl;
   #statusEl;
@@ -72,17 +75,32 @@ export class FilePreviewElement extends HTMLElement {
     this.#pageTotal = el('span', { text: '/ 1' });
     this.#pageGroup = el('div', { class: 'fp-pagegroup', style: { display: 'none' } });
 
+    // Leading slot: holds the close button in modal chrome, where convention
+    // (Drive, OneDrive, Photos) puts dismissal at the top-left, not the right.
+    this.#leadSlot = el('div', { class: 'fp-lead' });
+
     this.#toolbar = el('div', { class: 'fp-toolbar', part: 'toolbar' }, [
+      this.#leadSlot,
       el('div', { class: 'fp-titlewrap' }, [this.#titleEl, this.#subtitleEl]),
       el('div', { class: 'fp-spacer' }),
       this.#statusEl,
-      this.#pageGroup,
-      this.#zoomGroup,
       this.#actionsHost,
     ]);
 
-    this.#stage = el('div', { class: 'fp-stage-host', part: 'stage' });
-    this.#root = el('div', { class: 'fp-root' }, [this.#toolbar, this.#stage]);
+    // Page and zoom controls float over the content in a bottom-centre pill
+    // rather than competing with the filename for room in the top bar.
+    this.#controls = el('div', { class: 'fp-controls', part: 'controls' }, [
+      this.#pageGroup,
+      el('div', { class: 'fp-sep fp-sep--controls' }),
+      this.#zoomGroup,
+    ]);
+
+    this.#stage = el('div', { class: 'fp-stage', part: 'content' });
+    this.#stageHost = el('div', { class: 'fp-stage-host', part: 'stage' }, [
+      this.#stage,
+      this.#controls,
+    ]);
+    this.#root = el('div', { class: 'fp-root' }, [this.#toolbar, this.#stageHost]);
     shadow.append(this.#root);
 
     this.#buildToolbarGroups();
@@ -92,7 +110,13 @@ export class FilePreviewElement extends HTMLElement {
 
   connectedCallback() {
     this.#connected = true;
-    if (!this.hasAttribute('inline') && !this.closest('file-preview-modal')) {
+    // `closest()` stops at the shadow boundary, so it can never see the modal
+    // that hosts us. Check the shadow root's host as well.
+    const shadowHost = this.getRootNode()?.host;
+    const insideModal =
+      Boolean(this.closest('file-preview-modal')) ||
+      shadowHost?.tagName === 'FILE-PREVIEW-MODAL';
+    if (!this.hasAttribute('inline') && !insideModal) {
       this.setAttribute('inline', '');
     }
     if (this.#pendingInput !== undefined) {
@@ -228,12 +252,30 @@ export class FilePreviewElement extends HTMLElement {
     this.#instance?.goToPage?.(n);
   }
 
-  /** Rebuild the right-hand buttons for the currently mounted viewer. */
+  /** Rebuild the toolbar for the currently mounted viewer. */
   #syncToolbar() {
     this.#actionsHost.replaceChildren();
+    this.#leadSlot.replaceChildren();
+
+    // Dismissal sits top-left in modal chrome, matching Drive/OneDrive/Photos.
+    if (this.hasAttribute('closable')) {
+      this.#leadSlot.append(
+        el('button', {
+          class: 'fp-tool fp-tool--close',
+          type: 'button',
+          title: 'Close (Esc)',
+          'aria-label': 'Close preview',
+          html: icon('close'),
+          onClick: () =>
+            this.dispatchEvent(new CustomEvent('fp-close', { bubbles: true, composed: true })),
+        }),
+      );
+    }
+
     if (!this.#source) {
       this.#zoomGroup.style.display = 'none';
       this.#pageGroup.style.display = 'none';
+      this.#syncControlsVisibility();
       return;
     }
 
@@ -276,17 +318,28 @@ export class FilePreviewElement extends HTMLElement {
       frag.push(tool('download', 'Download', () => this.download()));
     }
 
-    if (frag.length) this.#actionsHost.append(el('div', { class: 'fp-sep' }), ...frag);
+    if (frag.length) this.#actionsHost.append(...frag);
+    this.#syncControlsVisibility();
+  }
 
-    // Close button only makes sense when hosted in the modal.
-    if (this.hasAttribute('closable')) {
-      this.#actionsHost.append(
-        tool('close', 'Close', () => this.dispatchEvent(new CustomEvent('fp-close', { bubbles: true, composed: true }))),
-      );
-    }
+  /** Hide the floating pill entirely when neither group has anything to show. */
+  #syncControlsVisibility() {
+    const pages = this.#pageGroup.style.display !== 'none';
+    const zoom = this.#zoomGroup.style.display !== 'none';
+    this.#controls.classList.toggle('is-hidden', !pages && !zoom);
+    this.#controls.querySelector('.fp-sep--controls')?.classList.toggle('is-hidden', !(pages && zoom));
   }
 
   // ------------------------------------------------------------------ load
+
+  #updateSubtitle(source) {
+    this.#subtitleEl.textContent = [
+      source.ext ? source.ext.toUpperCase() : source.mime,
+      formatBytes(source.size),
+    ]
+      .filter(Boolean)
+      .join(' · ');
+  }
 
   #loadFromAttributes() {
     const src = this.getAttribute('src');
@@ -338,9 +391,7 @@ export class FilePreviewElement extends HTMLElement {
 
     this.#titleEl.textContent = source.name;
     this.#titleEl.title = source.name;
-    this.#subtitleEl.textContent = [source.ext ? source.ext.toUpperCase() : '', formatBytes(source.size)]
-      .filter(Boolean)
-      .join(' · ');
+    this.#updateSubtitle(source);
     this.#syncToolbar();
 
     const abort = new AbortController();
@@ -366,21 +417,32 @@ export class FilePreviewElement extends HTMLElement {
     };
 
     try {
+      // Magic bytes outrank the filename, so consult them *before* choosing a
+      // viewer whenever that is cheap or the signals disagree. Skipping this
+      // would let a PNG named ".txt" reach the text viewer and fail to decode.
+      if (shouldPreSniff(source)) {
+        ctx.setStatus('Identifying file…');
+        try {
+          await source.refine({ signal: abort.signal, onProgress: ctx.setProgress });
+          if (token !== this.#loadToken) return;
+          this.#updateSubtitle(source);
+        } catch (err) {
+          if (token !== this.#loadToken) return;
+          this.#renderError(toPreviewError(err), source);
+          return;
+        }
+      }
+
       let viewer = resolveViewer(source, this.#failedViewers);
 
-      // Nothing matched on filename alone. Read the first bytes and try again —
-      // this rescues extensionless URLs and servers that lie about Content-Type.
+      // Still nothing. Read the first bytes and try again — this rescues
+      // extensionless URLs and servers that lie about Content-Type.
       if (!viewer && (source.blob || source.url)) {
         ctx.setStatus('Identifying file…');
         try {
           await source.refine({ signal: abort.signal, onProgress: ctx.setProgress });
           if (token !== this.#loadToken) return;
-          this.#subtitleEl.textContent = [
-            source.ext ? source.ext.toUpperCase() : source.mime,
-            formatBytes(source.size),
-          ]
-            .filter(Boolean)
-            .join(' · ');
+          this.#updateSubtitle(source);
           viewer = resolveViewer(source, this.#failedViewers);
         } catch (err) {
           if (token !== this.#loadToken) return;

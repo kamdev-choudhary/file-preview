@@ -1,5 +1,5 @@
 {
-  "name": "@keshav/file-preview",
+  "name": "@quartix/file-preview",
   "version": "0.1.0",
   "description": "Framework-free universal file preview web component. Images, PDF, Office docs, media, code, archives — inline or full-screen modal.",
   "type": "module",

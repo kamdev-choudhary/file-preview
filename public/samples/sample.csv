@@ -1,0 +1,7 @@
+id,product,region,units,revenue,notes
+1,Widget,North,1240,15480.50,"Steady, no issues"
+2,Gadget,South,880,22990.00,"Contains a comma, and ""quotes"""
+3,Doohickey,East,0,0.00,Discontinued
+4,Thingamajig,West,2310,41200.75,"Multi-line
+note field"
+5,Gizmo,North,145,3620.25,

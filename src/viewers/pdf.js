@@ -60,9 +60,15 @@ export default async function pdfViewer(ctx) {
     // pdf.js transfers and detaches this buffer; hand it a copy so a retry or a
     // "Download" click still has the original bytes to work with.
     data: data.slice(0),
-    // Fonts/cmaps come from the same CDN as the worker when not bundled.
-    cMapUrl: `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/cmaps/`,
+    // CMaps (CJK text) and the standard-14 font data are separate assets.
+    // Without standardFontDataUrl, documents relying on built-in fonts like
+    // Helvetica render blank text. Both are version-pinned to the imported
+    // build so the data can never disagree with the parser.
+    cMapUrl: config.pdfCMapUrl ?? `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/cmaps/`,
     cMapPacked: true,
+    standardFontDataUrl:
+      config.pdfStandardFontDataUrl ??
+      `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/standard_fonts/`,
     isEvalSupported: false,
   });
   d.add(() => task.destroy?.());

@@ -1,6 +1,6 @@
-import { defineConfig } from 'vite';
-import { copyFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { defineConfig } from "vite";
+import { copyFileSync, mkdirSync } from "node:fs";
+import { resolve } from "node:path";
 
 /**
  * Library build.
@@ -12,30 +12,33 @@ import { resolve } from 'node:path';
  */
 export default defineConfig({
   build: {
-    target: 'es2020',
-    outDir: 'dist',
+    target: "es2020",
+    outDir: "dist",
     emptyOutDir: true,
-    minify: 'esbuild',
+    // Vite 8 bundles with rolldown/oxc; 'esbuild' would need a separate install.
+    minify: "oxc",
     sourcemap: true,
     lib: {
-      entry: resolve(import.meta.dirname, 'src/index.js'),
-      formats: ['es'],
+      entry: resolve(import.meta.dirname, "src/index.js"),
+      formats: ["es"],
     },
     rollupOptions: {
       output: {
-        entryFileNames: 'index.js',
-        chunkFileNames: 'chunks/[name]-[hash].js',
-        assetFileNames: 'assets/[name]-[hash][extname]',
+        entryFileNames: "index.js",
+        chunkFileNames: "chunks/[name]-[hash].js",
+        assetFileNames: "assets/[name]-[hash][extname]",
       },
     },
   },
   plugins: [
     {
-      name: 'copy-types',
-      closeBundle() {
+      name: "copy-types",
+      writeBundle() {
+        const dir = resolve(import.meta.dirname, "dist");
+        mkdirSync(dir, { recursive: true });
         copyFileSync(
-          resolve(import.meta.dirname, 'src/index.d.ts'),
-          resolve(import.meta.dirname, 'dist/index.d.ts'),
+          resolve(import.meta.dirname, "src/index.d.ts"),
+          resolve(dir, "index.d.ts"),
         );
       },
     },

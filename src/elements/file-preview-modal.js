@@ -62,13 +62,15 @@ export class FilePreviewModalElement extends HTMLElement {
 
     this.#shell = el('div', { class: 'fp-shell', part: 'shell' }, [this.#preview]);
     shadow.append(this.#backdrop, this.#shell, this.#prevBtn, this.#nextBtn, this.#counter);
-
-    this.setAttribute('role', 'dialog');
-    this.setAttribute('aria-modal', 'true');
-    this.setAttribute('aria-label', 'File preview');
   }
 
   connectedCallback() {
+    // A custom element constructor must not touch its own attributes — doing so
+    // makes document.createElement() throw outright. Set them on connect.
+    if (!this.hasAttribute('role')) this.setAttribute('role', 'dialog');
+    if (!this.hasAttribute('aria-modal')) this.setAttribute('aria-modal', 'true');
+    if (!this.hasAttribute('aria-label')) this.setAttribute('aria-label', 'File preview');
+
     this.#backdrop.addEventListener('click', () => this.close());
     this.#preview.addEventListener('fp-close', () => this.close());
     // Re-emit viewer events from the modal so callers can listen in one place.

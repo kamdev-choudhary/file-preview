@@ -1,0 +1,69 @@
+{
+  "name": "@keshav/file-preview",
+  "version": "0.1.0",
+  "description": "Framework-free universal file preview web component. Images, PDF, Office docs, media, code, archives — inline or full-screen modal.",
+  "type": "module",
+  "license": "MIT",
+  "sideEffects": [
+    "./dist/index.js"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build --config vite.lib.config.js",
+    "build:demo": "vite build",
+    "preview": "vite preview",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "file-preview",
+    "file-viewer",
+    "web-component",
+    "custom-element",
+    "pdf-viewer",
+    "docx",
+    "xlsx",
+    "pptx",
+    "lightbox",
+    "vanilla-js"
+  ],
+  "dependencies": {
+    "dompurify": "^3.4.14",
+    "highlight.js": "^11.12.0",
+    "jszip": "^3.10.1",
+    "mammoth": "^1.12.1",
+    "marked": "^18.0.10",
+    "pdfjs-dist": "^6.2.108"
+  },
+  "peerDependencies": {
+    "xlsx": "*"
+  },
+  "peerDependenciesMeta": {
+    "xlsx": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "vite": "^8.2.2"
+  },
+  "allowScripts": {
+    "esbuild@0.25.12": true
+  }
+}

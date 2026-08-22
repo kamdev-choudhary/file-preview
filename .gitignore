@@ -1,5 +1,8 @@
-node_modules
-dist
-
-.probe/*
-.probe
+node_modules/
+dist/
+dist-demo/
+public/samples/
+.probe/
+*.log
+.DS_Store
+.vite/

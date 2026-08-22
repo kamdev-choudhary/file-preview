@@ -47,7 +47,14 @@ export class FilePreviewElement extends HTMLElement {
   #instance = null;
   #abort = null;
   #loadToken = 0;
+  /**
+   * Viewers that already failed on the *current* file, so the retry path can
+   * fall through to the next-best match. Scoped to `#failedFor`: without that,
+   * one bad file would permanently blacklist a viewer for every later file
+   * loaded into the same element — and the modal reuses a single element.
+   */
   #failedViewers = new Set();
+  #failedFor = null;
   #d = disposer();
   #connected = false;
   #pendingInput = undefined;
@@ -64,7 +71,9 @@ export class FilePreviewElement extends HTMLElement {
     this.#actionsHost = el('div', { class: 'fp-actions', style: { display: 'contents' } });
 
     this.#zoomLabel = el('span', { class: 'fp-zoomlabel', text: '100%' });
-    this.#zoomGroup = el('div', { class: 'fp-zoomgroup is-hidden', style: { display: 'none' } });
+    // Visibility is driven by the inline `display` style below. Do not add
+    // `is-hidden` here: that rule is `!important` and would win permanently.
+    this.#zoomGroup = el('div', { class: 'fp-zoomgroup', style: { display: 'none' } });
 
     this.#pageInput = el('input', {
       class: 'fp-pageinput',
@@ -388,6 +397,13 @@ export class FilePreviewElement extends HTMLElement {
     // Revoke the previous source's object URL, but never one we were handed.
     if (this.#source && this.#source !== source && this.#source !== input) this.#source.destroy();
     this.#source = source;
+
+    // A new file starts with a clean slate. The retry path re-enters #load()
+    // with the *same* Source object, so its blacklist survives that hop only.
+    if (this.#failedFor !== source) {
+      this.#failedViewers.clear();
+      this.#failedFor = source;
+    }
 
     this.#titleEl.textContent = source.name;
     this.#titleEl.title = source.name;

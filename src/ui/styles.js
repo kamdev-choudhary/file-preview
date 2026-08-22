@@ -131,6 +131,12 @@ export const css = `
   border-color: var(--fp-chrome-border);
   color: var(--fp-chrome-dim);
 }
+:host([chrome="modal"]) .fp-notice {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--fp-chrome-border);
+  color: var(--fp-chrome-dim);
+}
+:host([chrome="modal"]) .fp-notice--collapsible summary { color: var(--fp-chrome-text); }
 /* Give the content room to breathe under the floating pill. */
 :host([chrome="modal"]) .fp-viewport--doc { padding: 28px 20px 84px; }
 :host([chrome="modal"]) .fp-pdf { padding: 22px 0 84px; background: var(--fp-chrome-canvas); }
@@ -446,6 +452,9 @@ export const css = `
   color: var(--fp-text-dim);
   font-size: 12.5px;
 }
+/* Keep notices aligned with the document column instead of spanning the
+   full canvas, where they would collide with the gallery counter. */
+.fp-viewport--doc > .fp-notice { max-width: 860px; margin-inline: auto; }
 .fp-notice--collapsible summary { cursor: pointer; color: var(--fp-text); }
 .fp-notice ul { margin: 8px 0 0; padding-left: 18px; }
 .fp-notice li { margin: 2px 0; }

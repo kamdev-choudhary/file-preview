@@ -11,13 +11,17 @@ import { resolve } from "node:path";
  * type is actually previewed. Bundling them into one file would defeat that.
  */
 export default defineConfig({
+  // The demo's public/ folder must not be copied into the published package.
+  publicDir: false,
   build: {
     target: "es2020",
     outDir: "dist",
     emptyOutDir: true,
     // Vite 8 bundles with rolldown/oxc; 'esbuild' would need a separate install.
     minify: "oxc",
-    sourcemap: true,
+    // Off deliberately: the maps are dominated by pdf.js and mammoth internals
+    // and would quadruple the tarball for something consumers rarely step into.
+    sourcemap: false,
     lib: {
       entry: resolve(import.meta.dirname, "src/index.js"),
       formats: ["es"],

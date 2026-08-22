@@ -80,6 +80,18 @@ export interface PreviewConfig {
   pdfWorkerSrc: string | null;
   /** Allow the "Open in Microsoft Office viewer" action. Default true. */
   officeViewer: boolean;
+  /**
+   * Injection points for heavy parsers.
+   *
+   * `xlsx` has no default: the npm build of SheetJS is frozen at 0.18.5 with
+   * unfixed prototype-pollution and ReDoS advisories that trigger while parsing
+   * untrusted files. Opt in explicitly if you need binary spreadsheets:
+   *   configure({ loaders: { xlsx: () => import('xlsx') } })
+   * CSV and TSV use a built-in parser and never need this.
+   */
+  loaders: {
+    xlsx?: (() => Promise<unknown>) | null;
+  };
   /** Headers sent with every remote fetch. */
   headers?: Record<string, string>;
   /** Credentials mode for remote fetches. Default 'same-origin'. */

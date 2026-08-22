@@ -4,7 +4,7 @@
   "description": "Framework-free universal file preview web component. Images, PDF, Office docs, media, code, archives — inline or full-screen modal.",
   "type": "module",
   "license": "MIT",
-  "author": "Kamdev Choudhary",
+  "author": "Quartix",
   "engines": {
     "node": ">=18"
   },

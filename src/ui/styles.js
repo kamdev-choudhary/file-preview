@@ -70,6 +70,72 @@ export const css = `
   --fp-shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.45);
 }
 
+/**
+ * Modal chrome.
+ *
+ * The shell — top bar, canvas, controls pill — is dark in both themes, the way
+ * Drive, OneDrive and Photos all do it: a neutral dark surround makes images
+ * and pages read better and stops the viewer competing with the host page.
+ * Document *content* still uses the themed surface tokens, so a Word file or a
+ * spreadsheet keeps its light page on that dark canvas in light mode.
+ */
+:host([chrome="modal"]) {
+  --fp-chrome-bg: #1e2024;
+  --fp-chrome-canvas: #17191c;
+  --fp-chrome-text: #f2f4f7;
+  --fp-chrome-dim: #a8b0bd;
+  --fp-chrome-border: rgba(255, 255, 255, 0.10);
+  --fp-chrome-hover: rgba(255, 255, 255, 0.10);
+  --fp-toolbar-h: 60px;
+  --fp-controls-bg: rgba(38, 41, 46, 0.92);
+  --fp-controls-border: rgba(255, 255, 255, 0.12);
+  --fp-controls-text: #d4dae3;
+  --fp-controls-text-strong: #ffffff;
+  --fp-controls-hover: rgba(255, 255, 255, 0.12);
+  --fp-controls-input-bg: rgba(255, 255, 255, 0.09);
+  border-radius: 0;
+  background: var(--fp-chrome-canvas);
+}
+:host([chrome="modal"]) .fp-root { background: var(--fp-chrome-canvas); border-radius: 0; }
+:host([chrome="modal"]) .fp-toolbar {
+  background: var(--fp-chrome-bg);
+  border-bottom: 1px solid var(--fp-chrome-border);
+  border-radius: 0;
+  padding: 0 14px 0 10px;
+  gap: 4px;
+}
+:host([chrome="modal"]) .fp-title { color: var(--fp-chrome-text); font-size: 15px; }
+:host([chrome="modal"]) .fp-subtitle,
+:host([chrome="modal"]) .fp-status { color: var(--fp-chrome-dim); }
+:host([chrome="modal"]) .fp-titlewrap { margin-left: 6px; }
+:host([chrome="modal"]) .fp-tool { color: var(--fp-chrome-dim); }
+:host([chrome="modal"]) .fp-tool:hover:not(:disabled) {
+  background: var(--fp-chrome-hover);
+  color: var(--fp-chrome-text);
+}
+:host([chrome="modal"]) .fp-tool.is-toggled {
+  background: var(--fp-chrome-hover);
+  color: #fff;
+  border-color: transparent;
+}
+:host([chrome="modal"]) .fp-tool--close { width: 38px; height: 38px; border-radius: 50%; }
+:host([chrome="modal"]) .fp-sep { background: var(--fp-chrome-border); }
+:host([chrome="modal"]) .fp-stage-host { background: var(--fp-chrome-canvas); }
+:host([chrome="modal"]) .fp-loading { background: var(--fp-chrome-canvas); }
+:host([chrome="modal"]) .fp-loading-label { color: var(--fp-chrome-dim); }
+:host([chrome="modal"]) .fp-panel-title { color: var(--fp-chrome-text); }
+:host([chrome="modal"]) .fp-panel-msg,
+:host([chrome="modal"]) .fp-panel-meta { color: var(--fp-chrome-dim); }
+:host([chrome="modal"]) .fp-panel-badge {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--fp-chrome-border);
+  color: var(--fp-chrome-dim);
+}
+/* Give the content room to breathe under the floating pill. */
+:host([chrome="modal"]) .fp-viewport--doc { padding: 28px 20px 84px; }
+:host([chrome="modal"]) .fp-pdf { padding: 22px 0 84px; background: var(--fp-chrome-canvas); }
+:host([chrome="modal"]) .fp-viewport--center { padding: 24px 24px 76px; }
+
 *, *::before, *::after { box-sizing: border-box; }
 
 .fp-root {
@@ -98,6 +164,9 @@ export const css = `
   border-bottom-right-radius: 0;
 }
 .fp-toolbar.is-hidden { display: none; }
+
+.fp-lead { display: flex; align-items: center; flex: none; }
+.fp-lead:empty { display: none; }
 
 .fp-titlewrap { min-width: 0; display: flex; flex-direction: column; justify-content: center; }
 .fp-title {
@@ -192,6 +261,44 @@ export const css = `
   overflow: hidden;
 }
 :host([inline]) .fp-stage-host { min-height: var(--fp-min-height, 320px); }
+
+/* Viewers mount here; the controls pill is a sibling so a reload cannot wipe it. */
+.fp-stage { position: absolute; inset: 0; }
+
+/* Floating page/zoom pill, bottom-centre over the content. */
+.fp-controls {
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--fp-controls-border, var(--fp-border));
+  background: var(--fp-controls-bg, var(--fp-bg-raised));
+  color: var(--fp-controls-text, var(--fp-text-dim));
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  opacity: 1;
+  transition: opacity 0.18s;
+}
+.fp-controls.is-hidden { display: none; }
+.fp-controls .fp-tool { height: 30px; min-width: 30px; color: inherit; }
+.fp-controls .fp-tool:hover:not(:disabled) {
+  background: var(--fp-controls-hover, var(--fp-bg-sunken));
+  color: var(--fp-controls-text-strong, var(--fp-text));
+}
+.fp-controls .fp-zoomlabel, .fp-controls .fp-pageind { color: inherit; }
+.fp-sep--controls { height: 18px; background: var(--fp-controls-border, var(--fp-border)); }
+.fp-controls .fp-pageinput {
+  background: var(--fp-controls-input-bg, var(--fp-bg));
+  border-color: var(--fp-controls-border, var(--fp-border));
+  color: inherit;
+}
 
 .fp-viewport {
   position: absolute;
@@ -646,73 +753,88 @@ export const modalCss = `
 }
 :host([open]) { display: block; }
 
+/**
+ * Full-bleed shell. Earlier this was an inset rounded card floating on a
+ * blurred backdrop, which wasted screen space and left the nav arrows stranded
+ * outside the frame. Drive/OneDrive/Photos all go edge-to-edge instead: the
+ * viewer *is* the screen, and its own top bar carries the identity and actions.
+ */
 .fp-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(8, 10, 14, .62);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  animation: fp-fade .16s ease-out;
+  background: #17191c;
+  animation: fp-fade .14s ease-out;
 }
 .fp-shell {
   position: absolute;
-  inset: clamp(8px, 3.5vh, 40px) clamp(8px, 3.5vw, 48px);
+  inset: 0;
   display: flex;
   flex-direction: column;
-  border-radius: 14px;
   overflow: hidden;
-  box-shadow: 0 24px 70px rgba(0,0,0,.5);
   animation: fp-pop .18s cubic-bezier(.2,.8,.3,1);
 }
 @keyframes fp-fade { from { opacity: 0; } }
-@keyframes fp-pop { from { opacity: 0; transform: scale(.985) translateY(6px); } }
+@keyframes fp-pop { from { opacity: 0; transform: scale(.994); } }
 @media (prefers-reduced-motion: reduce) {
   .fp-backdrop, .fp-shell { animation: none; }
 }
 
-file-preview { flex: 1 1 auto; min-height: 0; border-radius: 14px; }
+file-preview { flex: 1 1 auto; min-height: 0; }
 
+/*
+ * Arrows sit just inside the content edges and are vertically centred on the
+ * canvas, not the whole screen — otherwise the top bar pushes them off-centre.
+ */
 .fp-nav {
   position: absolute;
-  top: 50%;
+  top: calc(60px + (100% - 60px) / 2);
   transform: translateY(-50%);
-  width: 44px; height: 44px;
+  width: 46px; height: 46px;
   display: grid;
   place-items: center;
-  border: 0;
+  border: 1px solid rgba(255,255,255,.12);
   border-radius: 50%;
-  background: rgba(20,22,28,.72);
+  background: rgba(38,41,46,.86);
   color: #fff;
   cursor: pointer;
-  z-index: 5;
-  transition: background .12s, opacity .12s;
+  z-index: 6;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 4px 18px rgba(0,0,0,.3);
+  transition: background .12s, opacity .12s, transform .12s;
 }
-.fp-nav:hover { background: rgba(20,22,28,.92); }
-.fp-nav:disabled { opacity: .25; cursor: default; }
+.fp-nav:hover:not(:disabled) { background: rgba(56,60,68,.96); }
+.fp-nav:active:not(:disabled) { transform: translateY(-50%) scale(.94); }
+.fp-nav:disabled { opacity: 0; pointer-events: none; }
 .fp-nav svg { width: 22px; height: 22px; }
-.fp-nav--prev { left: clamp(4px, 1.6vw, 18px); }
-.fp-nav--next { right: clamp(4px, 1.6vw, 18px); }
-.fp-nav:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.fp-nav--prev { left: 18px; }
+.fp-nav--next { right: 18px; }
+.fp-nav:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
 
+/* Gallery position indicator, top-right of the canvas so it never collides
+   with the page/zoom pill at bottom-centre. */
 .fp-counter {
   position: absolute;
-  bottom: 14px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 5px 13px;
+  top: calc(60px + 16px);
+  right: 18px;
+  padding: 5px 12px;
   border-radius: 999px;
-  background: rgba(20,22,28,.72);
-  color: #fff;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(38,41,46,.86);
+  color: #e8ebef;
   font-size: 12px;
   font-variant-numeric: tabular-nums;
-  z-index: 5;
+  z-index: 6;
   pointer-events: none;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 @media (max-width: 640px) {
-  .fp-shell { inset: 0; border-radius: 0; }
-  file-preview { border-radius: 0; }
-  .fp-nav { width: 38px; height: 38px; }
+  .fp-nav { width: 40px; height: 40px; }
+  .fp-nav--prev { left: 8px; }
+  .fp-nav--next { right: 8px; }
+  .fp-counter { top: calc(56px + 10px); right: 10px; }
 }
 `;
 

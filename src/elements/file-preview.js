@@ -521,6 +521,8 @@ export class FilePreviewElement extends HTMLElement {
         this.#pageTotal.textContent = `/ ${total}`;
       });
     }
+
+    this.#syncControlsVisibility();
   }
 
   #showOfficeFrame() {

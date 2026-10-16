@@ -62,7 +62,7 @@ openPreview([fileA, fileB, fileC], { index: 1 });
 ```
 
 ```js
-import '@quartix/file-preview';   // registers the elements
+import '@quartix/file-preview'; // registers the elements
 ```
 
 Or imperatively:
@@ -77,21 +77,21 @@ renderPreview('#viewer', myFile, { minHeight: '600px', bordered: true });
 
 ## Supported files
 
-| Category | Formats | Engine | Fidelity |
-| --- | --- | --- | --- |
-| Images | png, jpg, gif, webp, avif, svg, bmp, ico, tiff¹ | native | exact, zoom + pan |
-| PDF | pdf | pdf.js | exact, lazy per-page |
-| Word | docx, docm | mammoth | **approximate** — semantic HTML, not page layout |
-| PowerPoint | pptx, pptm | built-in OOXML reader | **content only** — text, images, notes |
-| Spreadsheets | xlsx, xls, xlsb, ods | SheetJS *(opt-in)* | values as a grid |
-| Delimited | csv, tsv | built-in parser | full, RFC 4180 |
-| Markdown | md, markdown, mdx | marked + DOMPurify | rendered + sanitised |
-| Code / text | 50+ extensions | highlight.js | syntax highlighted |
-| Data | json, jsonl, geojson | built-in | pretty-printed |
-| Video | mp4, webm, mov, ogv² | native | streams, no full download |
-| Audio | mp3, wav, ogg, m4a, flac, opus | native | streams |
-| Archives | zip, jar | JSZip | file listing |
-| Fonts | woff, woff2, ttf, otf | FontFace | live specimen |
+| Category     | Formats                                         | Engine                | Fidelity                                         |
+| ------------ | ----------------------------------------------- | --------------------- | ------------------------------------------------ |
+| Images       | png, jpg, gif, webp, avif, svg, bmp, ico, tiff¹ | native                | exact, zoom + pan                                |
+| PDF          | pdf                                             | pdf.js                | exact, lazy per-page                             |
+| Word         | docx, docm                                      | mammoth               | **approximate** — semantic HTML, not page layout |
+| PowerPoint   | pptx, pptm                                      | built-in OOXML reader | **content only** — text, images, notes           |
+| Spreadsheets | xlsx, xls, xlsb, ods                            | SheetJS _(opt-in)_    | values as a grid                                 |
+| Delimited    | csv, tsv                                        | built-in parser       | full, RFC 4180                                   |
+| Markdown     | md, markdown, mdx                               | marked + DOMPurify    | rendered + sanitised                             |
+| Code / text  | 50+ extensions                                  | highlight.js          | syntax highlighted                               |
+| Data         | json, jsonl, geojson                            | built-in              | pretty-printed                                   |
+| Video        | mp4, webm, mov, ogv²                            | native                | streams, no full download                        |
+| Audio        | mp3, wav, ogg, m4a, flac, opus                  | native                | streams                                          |
+| Archives     | zip, jar                                        | JSZip                 | file listing                                     |
+| Fonts        | woff, woff2, ttf, otf                           | FontFace              | live specimen                                    |
 
 Anything unrecognised gets a clean download card rather than a broken view.
 
@@ -106,7 +106,7 @@ bold/italic, inline images); page geometry, headers/footers and text boxes are d
 PowerPoint files give you text, images and presenter notes, not slide layout or theming.
 
 When exact rendering matters and the file sits at a **public URL**, the toolbar offers
-*Open in Microsoft Office viewer*, which renders it server-side at full fidelity. That sends
+_Open in Microsoft Office viewer_, which renders it server-side at full fidelity. That sends
 the URL to Microsoft, so it is always an explicit user action — never automatic. Disable it
 entirely with `configure({ officeViewer: false })`.
 
@@ -122,10 +122,10 @@ Opens the full-screen modal. Returns a handle.
 const handle = openPreview(files, {
   index: 0,
   theme: 'dark',
-  onLoad:   ({ source, viewer }) => {},
-  onError:  ({ source, error })  => console.warn(error.code, error.message),
-  onChange: ({ index, source })  => {},
-  onClose:  () => {},
+  onLoad: ({ source, viewer }) => {},
+  onError: ({ source, error }) => console.warn(error.code, error.message),
+  onChange: ({ index, source }) => {},
+  onClose: () => {},
 });
 
 handle.go(2);
@@ -141,7 +141,7 @@ Renders inline into an element or selector. Returns the `<file-preview>` element
 
 ```js
 renderPreview('#viewer', '/report.pdf', {
-  theme: 'dark',      // 'light' | 'dark' — omit to follow the OS
+  theme: 'dark', // 'light' | 'dark' — omit to follow the OS
   toolbar: true,
   bordered: true,
   minHeight: '520px',
@@ -156,7 +156,7 @@ endpoint that needs headers:
 ```js
 openPreview({
   url: 'https://api.example.com/files/8fa21c',
-  name: 'Q3 report.xlsx',        // gives the viewer an extension to work with
+  name: 'Q3 report.xlsx', // gives the viewer an extension to work with
   type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   headers: { Authorization: `Bearer ${token}` },
   credentials: 'include',
@@ -180,8 +180,8 @@ openPreview({
 ```js
 const el = document.querySelector('file-preview');
 
-el.file = someBlob;        // assign any accepted input
-el.source;                 // the resolved Source
+el.file = someBlob; // assign any accepted input
+el.source; // the resolved Source
 el.reload();
 el.clear();
 await el.download();
@@ -189,11 +189,11 @@ await el.download();
 
 **Events** (all bubble and cross the shadow boundary):
 
-| Event | `detail` |
-| --- | --- |
-| `fp-load` | `{ source, viewer }` |
-| `fp-error` | `{ source, error }` |
-| `fp-close` | — |
+| Event       | `detail`                         |
+| ----------- | -------------------------------- |
+| `fp-load`   | `{ source, viewer }`             |
+| `fp-error`  | `{ source, error }`              |
+| `fp-close`  | —                                |
 | `fp-change` | `{ index, source }` (modal only) |
 
 ---
@@ -206,9 +206,9 @@ Call once at startup.
 import { configure } from '@quartix/file-preview';
 
 configure({
-  maxBytes: 100 * 1024 * 1024,   // refuse to buffer files larger than this
+  maxBytes: 100 * 1024 * 1024, // refuse to buffer files larger than this
   maxTextBytes: 5 * 1024 * 1024, // truncate text/code past this
-  officeViewer: true,            // allow the Microsoft viewer action
+  officeViewer: true, // allow the Microsoft viewer action
   credentials: 'same-origin',
   headers: { 'X-Tenant': 'acme' },
   locale: 'en-GB',
@@ -292,18 +292,18 @@ Shadow parts are exposed for structural tweaks:
 
 Every failure surfaces as a `PreviewError` with a stable `code`:
 
-| Code | Meaning |
-| --- | --- |
-| `CORS` | The server did not allow this page to read the file |
-| `HTTP` | Non-2xx response (`error.status` has the code) |
-| `NETWORK` | Connection failed mid-transfer |
-| `TOO_LARGE` | Exceeded `maxBytes` |
-| `PASSWORD` | Encrypted PDF or workbook |
-| `DECODE` | Corrupt or not the format it claimed |
-| `UNSUPPORTED` | No viewer for this type |
-| `DEPENDENCY` | A parser could not be loaded (e.g. SheetJS not configured) |
-| `EMPTY` | Nothing to show |
-| `ABORTED` | Superseded by another load, or closed |
+| Code          | Meaning                                                    |
+| ------------- | ---------------------------------------------------------- |
+| `CORS`        | The server did not allow this page to read the file        |
+| `HTTP`        | Non-2xx response (`error.status` has the code)             |
+| `NETWORK`     | Connection failed mid-transfer                             |
+| `TOO_LARGE`   | Exceeded `maxBytes`                                        |
+| `PASSWORD`    | Encrypted PDF or workbook                                  |
+| `DECODE`      | Corrupt or not the format it claimed                       |
+| `UNSUPPORTED` | No viewer for this type                                    |
+| `DEPENDENCY`  | A parser could not be loaded (e.g. SheetJS not configured) |
+| `EMPTY`       | Nothing to show                                            |
+| `ABORTED`     | Superseded by another load, or closed                      |
 
 ```js
 openPreview(url, {
@@ -330,7 +330,7 @@ registerViewer({
   id: 'dicom',
   label: 'DICOM',
   match: (source) => (source.ext === 'dcm' ? 1 : 0),
-  load: () => import('./dicom-viewer.js'),   // default export = factory
+  load: () => import('./dicom-viewer.js'), // default export = factory
 });
 ```
 
@@ -360,7 +360,9 @@ import '@quartix/file-preview';
 
 export function Preview({ file }) {
   const ref = useRef(null);
-  useEffect(() => { if (ref.current) ref.current.file = file; }, [file]);
+  useEffect(() => {
+    if (ref.current) ref.current.file = file;
+  }, [file]);
   return <file-preview ref={ref} bordered style={{ '--fp-min-height': '520px' }} />;
 }
 ```
@@ -395,12 +397,12 @@ Add `CUSTOM_ELEMENTS_SCHEMA` to the module or component that uses the tags.
 
 ## Keyboard
 
-| Key | Action |
-| --- | --- |
-| `Esc` | Close the modal |
-| `←` / `→` | Previous / next file in a gallery |
-| `Tab` | Cycles within the modal (focus is trapped, and restored on close) |
-| `Ctrl`/`⌘` + scroll | Zoom images and PDFs |
+| Key                 | Action                                                            |
+| ------------------- | ----------------------------------------------------------------- |
+| `Esc`               | Close the modal                                                   |
+| `←` / `→`           | Previous / next file in a gallery                                 |
+| `Tab`               | Cycles within the modal (focus is trapped, and restored on close) |
+| `Ctrl`/`⌘` + scroll | Zoom images and PDFs                                              |
 
 ---
 

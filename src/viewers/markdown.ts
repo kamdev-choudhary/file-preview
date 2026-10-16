@@ -44,9 +44,17 @@ export default async function markdownViewer(ctx: ViewerContext): Promise<Viewer
   // than leaving a silent broken-image icon.
   for (const img of article.querySelectorAll<HTMLImageElement>('img')) {
     img.loading = 'lazy';
-    img.addEventListener('error', () => img.replaceWith(
-      el('span', { class: 'fp-inline-missing', text: `[missing image: ${img.getAttribute('src') || ''}]` }),
-    ), { once: true });
+    img.addEventListener(
+      'error',
+      () =>
+        img.replaceWith(
+          el('span', {
+            class: 'fp-inline-missing',
+            text: `[missing image: ${img.getAttribute('src') || ''}]`,
+          }),
+        ),
+      { once: true },
+    );
   }
 
   const viewport = el('div', { class: 'fp-viewport fp-viewport--doc' }, [article]);

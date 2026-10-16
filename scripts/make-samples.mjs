@@ -71,7 +71,18 @@ write(
     {
       name: '@quartix/file-preview',
       detection: { order: ['magic bytes', 'extension', 'declared MIME'] },
-      viewers: ['image', 'pdf', 'sheet', 'docx', 'pptx', 'markdown', 'text', 'archive', 'font', 'media'],
+      viewers: [
+        'image',
+        'pdf',
+        'sheet',
+        'docx',
+        'pptx',
+        'markdown',
+        'text',
+        'archive',
+        'font',
+        'media',
+      ],
       limits: { maxBytes: 104857600, maxTextBytes: 5242880 },
       nested: { deeply: { values: [1, 2, 3, null, true], unicode: 'héllo — wörld ✓' } },
     },
@@ -287,9 +298,31 @@ pptx.file(
 );
 
 const decks = [
-  ['Universal file preview', [{ text: 'One component, every file type' }, { text: 'Framework-free web component', lvl: 1 }, { text: 'Lazy-loaded viewers', lvl: 1 }]],
-  ['How detection works', [{ text: 'Magic bytes first' }, { text: 'Extension decides OOXML', lvl: 1 }, { text: 'Declared MIME last', lvl: 1 }, { text: 'A .txt that is really a PDF still renders as a PDF' }]],
-  ['Fidelity caveat', [{ text: 'Text and images are extracted from the package' }, { text: 'Layout and theming are not reproduced', lvl: 1 }, { text: 'Use the Office viewer for exact rendering', lvl: 1 }]],
+  [
+    'Universal file preview',
+    [
+      { text: 'One component, every file type' },
+      { text: 'Framework-free web component', lvl: 1 },
+      { text: 'Lazy-loaded viewers', lvl: 1 },
+    ],
+  ],
+  [
+    'How detection works',
+    [
+      { text: 'Magic bytes first' },
+      { text: 'Extension decides OOXML', lvl: 1 },
+      { text: 'Declared MIME last', lvl: 1 },
+      { text: 'A .txt that is really a PDF still renders as a PDF' },
+    ],
+  ],
+  [
+    'Fidelity caveat',
+    [
+      { text: 'Text and images are extracted from the package' },
+      { text: 'Layout and theming are not reproduced', lvl: 1 },
+      { text: 'Use the Office viewer for exact rendering', lvl: 1 },
+    ],
+  ],
 ];
 
 decks.forEach(([title, bullets], i) => {
@@ -300,7 +333,10 @@ decks.forEach(([title, bullets], i) => {
     `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"/>`,
   );
-  pptx.file(`ppt/notesSlides/notesSlide${n}.xml`, notesXml(`Presenter note for slide ${n}: this text lives in notesSlide${n}.xml.`));
+  pptx.file(
+    `ppt/notesSlides/notesSlide${n}.xml`,
+    notesXml(`Presenter note for slide ${n}: this text lives in notesSlide${n}.xml.`),
+  );
 });
 write('sample.pptx', await pptx.generateAsync({ type: 'nodebuffer' }));
 

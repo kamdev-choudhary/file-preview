@@ -26,12 +26,7 @@ export {
   formatBytes,
 };
 
-export type {
-  ChangeDetail,
-  ErrorDetail,
-  LoadDetail,
-  PreviewInput,
-};
+export type { ChangeDetail, ErrorDetail, LoadDetail, PreviewInput };
 export type { FileDescriptor, ReadOptions, SourceDefaults, SourceInit } from './core/source.js';
 export type { PreviewConfig, XlsxLoader } from './core/config.js';
 export type { PreviewErrorCode, PreviewErrorOptions } from './core/errors.js';

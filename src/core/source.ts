@@ -25,13 +25,7 @@ export interface FileDescriptor {
 
 /** Anything the library accepts as "a file". */
 export type PreviewInput =
-  | string
-  | File
-  | Blob
-  | ArrayBuffer
-  | ArrayBufferView
-  | FileDescriptor
-  | Source;
+  string | File | Blob | ArrayBuffer | ArrayBufferView | FileDescriptor | Source;
 
 /** Defaults applied to every input in one call. */
 export interface SourceDefaults {

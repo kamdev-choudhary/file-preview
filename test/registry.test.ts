@@ -93,7 +93,12 @@ group('resolveViewer scoring', () => {
   });
 
   it('lets a later registration win a tie, so overrides beat built-ins', () => {
-    register({ id: 'custom-pdf', label: 'c', match: (s) => (s.kind === Kind.PDF ? 1 : 0), load: stub('a', 1).load });
+    register({
+      id: 'custom-pdf',
+      label: 'c',
+      match: (s) => (s.kind === Kind.PDF ? 1 : 0),
+      load: stub('a', 1).load,
+    });
     expect(resolveViewer(toSource('/a.pdf'))?.id).toBe('custom-pdf');
   });
 

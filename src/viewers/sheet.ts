@@ -288,7 +288,10 @@ interface SheetJsWorkbook {
 }
 
 interface SheetJsModule {
-  read(data: ArrayBuffer, opts: { type: string; cellDates: boolean; cellStyles: boolean }): SheetJsWorkbook;
+  read(
+    data: ArrayBuffer,
+    opts: { type: string; cellDates: boolean; cellStyles: boolean },
+  ): SheetJsWorkbook;
   utils: {
     decode_range(ref: string): SheetJsRange;
     sheet_to_json(

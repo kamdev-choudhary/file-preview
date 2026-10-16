@@ -4,7 +4,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>file-preview — universal file preview component</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='13' font-size='14'>📄</text></svg>" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='13' font-size='14'>📄</text></svg>"
+    />
     <link rel="stylesheet" href="/demo/demo.css" />
   </head>
   <body>
@@ -12,8 +15,8 @@
       <div class="wrap">
         <h1>file&#8209;preview</h1>
         <p class="tagline">
-          One framework-free web component that previews images, PDFs, Office documents,
-          media, code, archives and fonts — from URLs, <code>File</code>s, Blobs or buffers.
+          One framework-free web component that previews images, PDFs, Office documents, media,
+          code, archives and fonts — from URLs, <code>File</code>s, Blobs or buffers.
         </p>
         <div class="hero-actions">
           <button class="btn btn-primary" id="pick">Choose files…</button>
@@ -28,8 +31,8 @@
       <section>
         <h2>Preview any URL</h2>
         <p class="section-note">
-          Remote files stream directly where possible. If a server blocks cross-origin
-          reads, the error explains exactly that and offers to open it in a new tab.
+          Remote files stream directly where possible. If a server blocks cross-origin reads, the
+          error explains exactly that and offers to open it in a new tab.
         </p>
         <form class="urlbar" id="url-form">
           <input
@@ -46,8 +49,8 @@
       <section>
         <h2>Sample files</h2>
         <p class="section-note">
-          Click any card to open it full-screen. Each viewer is a separate lazily-loaded
-          chunk — open DevTools&nbsp;→&nbsp;Network to watch them arrive only when needed.
+          Click any card to open it full-screen. Each viewer is a separate lazily-loaded chunk —
+          open DevTools&nbsp;→&nbsp;Network to watch them arrive only when needed.
         </p>
         <div class="grid" id="samples"></div>
       </section>
@@ -55,8 +58,8 @@
       <section>
         <h2>Inline mode</h2>
         <p class="section-note">
-          The same component embedded in a page instead of a modal. Switch files with the
-          buttons; the toolbar adapts to whatever the active viewer supports.
+          The same component embedded in a page instead of a modal. Switch files with the buttons;
+          the toolbar adapts to whatever the active viewer supports.
         </p>
         <div class="chips" id="inline-chips"></div>
         <file-preview id="inline" bordered style="--fp-min-height: 460px"></file-preview>
@@ -65,8 +68,8 @@
       <section>
         <h2>Error handling</h2>
         <p class="section-note">
-          Every failure is typed, and the recovery buttons are chosen from the error code.
-          These all fail on purpose.
+          Every failure is typed, and the recovery buttons are chosen from the error code. These all
+          fail on purpose.
         </p>
         <div class="grid grid-errors" id="errors"></div>
       </section>
@@ -74,8 +77,8 @@
       <section>
         <h2>Event log</h2>
         <p class="section-note">
-          <code>fp-load</code>, <code>fp-error</code> and <code>fp-change</code> events,
-          as they fire.
+          <code>fp-load</code>, <code>fp-error</code> and <code>fp-change</code> events, as they
+          fire.
         </p>
         <pre class="log" id="log">Waiting for events…</pre>
       </section>

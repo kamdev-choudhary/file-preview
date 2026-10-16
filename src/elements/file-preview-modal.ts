@@ -1,10 +1,10 @@
-import { el, disposer } from "../ui/dom.js";
-import { icon } from "../ui/icons.js";
-import { modalCss, makeStyles, applyStyles } from "../ui/styles.js";
-import { toSources } from "../core/source.js";
-import type { PreviewInput, Source } from "../core/source.js";
-import { getConfig } from "../core/config.js";
-import { FilePreviewElement } from "./file-preview.js";
+import { el, disposer } from '../ui/dom.js';
+import { icon } from '../ui/icons.js';
+import { modalCss, makeStyles, applyStyles } from '../ui/styles.js';
+import { toSources } from '../core/source.js';
+import type { PreviewInput, Source } from '../core/source.js';
+import { getConfig } from '../core/config.js';
+import { FilePreviewElement } from './file-preview.js';
 
 /** `fp-change` detail, fired when a gallery moves between files. */
 export interface ChangeDetail {
@@ -15,7 +15,7 @@ export interface ChangeDetail {
 /** Options accepted by {@link FilePreviewModalElement.show}. */
 export interface ShowOptions {
   index?: number;
-  theme?: "light" | "dark" | string;
+  theme?: 'light' | 'dark' | string;
 }
 
 const sheet = makeStyles(modalCss);
@@ -48,63 +48,51 @@ export class FilePreviewModalElement extends HTMLElement {
 
   constructor() {
     super();
-    const shadow = this.attachShadow({ mode: "open" });
+    const shadow = this.attachShadow({ mode: 'open' });
     applyStyles(shadow, sheet);
 
-    this.#backdrop = el("div", { class: "fp-backdrop", part: "backdrop" });
+    this.#backdrop = el('div', { class: 'fp-backdrop', part: 'backdrop' });
     // Constructed rather than `new FilePreviewElement()` so the element is
     // always upgraded through the registry, whatever defined it first.
-    this.#preview = document.createElement("file-preview") as FilePreviewElement;
-    const theme = this.getAttribute("theme");
-    if (theme) this.#preview.setAttribute("theme", theme);
-    this.#preview.setAttribute("closable", "");
-    this.#preview.setAttribute("chrome", "modal");
+    this.#preview = document.createElement('file-preview') as FilePreviewElement;
+    const theme = this.getAttribute('theme');
+    if (theme) this.#preview.setAttribute('theme', theme);
+    this.#preview.setAttribute('closable', '');
+    this.#preview.setAttribute('chrome', 'modal');
 
-    this.#prevBtn = el("button", {
-      class: "fp-nav fp-nav--prev",
-      type: "button",
-      "aria-label": "Previous file",
-      html: icon("prev"),
+    this.#prevBtn = el('button', {
+      class: 'fp-nav fp-nav--prev',
+      type: 'button',
+      'aria-label': 'Previous file',
+      html: icon('prev'),
       onClick: () => this.go(this.#index - 1),
     });
-    this.#nextBtn = el("button", {
-      class: "fp-nav fp-nav--next",
-      type: "button",
-      "aria-label": "Next file",
-      html: icon("next"),
+    this.#nextBtn = el('button', {
+      class: 'fp-nav fp-nav--next',
+      type: 'button',
+      'aria-label': 'Next file',
+      html: icon('next'),
       onClick: () => this.go(this.#index + 1),
     });
-    this.#counter = el("div", { class: "fp-counter" });
+    this.#counter = el('div', { class: 'fp-counter' });
 
-    this.#shell = el("div", { class: "fp-shell", part: "shell" }, [
-      this.#preview,
-    ]);
-    shadow.append(
-      this.#backdrop,
-      this.#shell,
-      this.#prevBtn,
-      this.#nextBtn,
-      this.#counter,
-    );
+    this.#shell = el('div', { class: 'fp-shell', part: 'shell' }, [this.#preview]);
+    shadow.append(this.#backdrop, this.#shell, this.#prevBtn, this.#nextBtn, this.#counter);
   }
 
   connectedCallback(): void {
     // A custom element constructor must not touch its own attributes — doing so
     // makes document.createElement() throw outright. Set them on connect.
-    if (!this.hasAttribute("role")) this.setAttribute("role", "dialog");
-    if (!this.hasAttribute("aria-modal"))
-      this.setAttribute("aria-modal", "true");
-    if (!this.hasAttribute("aria-label"))
-      this.setAttribute("aria-label", "File preview");
+    if (!this.hasAttribute('role')) this.setAttribute('role', 'dialog');
+    if (!this.hasAttribute('aria-modal')) this.setAttribute('aria-modal', 'true');
+    if (!this.hasAttribute('aria-label')) this.setAttribute('aria-label', 'File preview');
 
-    this.#backdrop.addEventListener("click", () => this.close());
-    this.#preview.addEventListener("fp-close", () => this.close());
+    this.#backdrop.addEventListener('click', () => this.close());
+    this.#preview.addEventListener('fp-close', () => this.close());
     // Re-emit viewer events from the modal so callers can listen in one place.
-    for (const type of ["fp-load", "fp-error"]) {
+    for (const type of ['fp-load', 'fp-error']) {
       this.#preview.addEventListener(type, (e: Event) => {
-        this.dispatchEvent(
-          new CustomEvent(type, { detail: (e as CustomEvent<unknown>).detail }),
-        );
+        this.dispatchEvent(new CustomEvent(type, { detail: (e as CustomEvent<unknown>).detail }));
       });
     }
   }
@@ -114,7 +102,7 @@ export class FilePreviewModalElement extends HTMLElement {
   }
 
   get open(): boolean {
-    return this.hasAttribute("open");
+    return this.hasAttribute('open');
   }
 
   /** The inner `<file-preview>`, if you need direct access. */
@@ -139,17 +127,14 @@ export class FilePreviewModalElement extends HTMLElement {
       credentials: config.credentials,
     });
     this.#ownsSources = true;
-    this.#index = Math.min(
-      Math.max(0, opts.index ?? 0),
-      Math.max(0, this.#items.length - 1),
-    );
+    this.#index = Math.min(Math.max(0, opts.index ?? 0), Math.max(0, this.#items.length - 1));
 
-    const theme = opts.theme ?? this.getAttribute("theme");
-    if (theme) this.#preview.setAttribute("theme", theme);
+    const theme = opts.theme ?? this.getAttribute('theme');
+    if (theme) this.#preview.setAttribute('theme', theme);
 
     if (!this.open) {
       this.#lastFocused = document.activeElement;
-      this.setAttribute("open", "");
+      this.setAttribute('open', '');
       this.#lockScroll();
       this.#bindGlobalKeys();
     }
@@ -171,7 +156,7 @@ export class FilePreviewModalElement extends HTMLElement {
     const source = this.#items[this.#index];
     if (!source) return;
     this.dispatchEvent(
-      new CustomEvent<ChangeDetail>("fp-change", {
+      new CustomEvent<ChangeDetail>('fp-change', {
         detail: { index: this.#index, source },
       }),
     );
@@ -179,10 +164,10 @@ export class FilePreviewModalElement extends HTMLElement {
 
   close(): void {
     if (!this.open) return;
-    this.removeAttribute("open");
+    this.removeAttribute('open');
     this.#preview.clear();
     this.#release();
-    this.dispatchEvent(new CustomEvent("fp-close"));
+    this.dispatchEvent(new CustomEvent('fp-close'));
     // Put focus back where the user left it.
     const target = this.#lastFocused;
     this.#lastFocused = null;
@@ -199,28 +184,26 @@ export class FilePreviewModalElement extends HTMLElement {
     this.#preview.file = source;
 
     const many = this.#items.length > 1;
-    this.#prevBtn.style.display = many ? "" : "none";
-    this.#nextBtn.style.display = many ? "" : "none";
-    this.#counter.style.display = many ? "" : "none";
+    this.#prevBtn.style.display = many ? '' : 'none';
+    this.#nextBtn.style.display = many ? '' : 'none';
+    this.#counter.style.display = many ? '' : 'none';
     this.#prevBtn.disabled = this.#index === 0;
     this.#nextBtn.disabled = this.#index === this.#items.length - 1;
-    this.#counter.textContent = many
-      ? `${this.#index + 1} of ${this.#items.length}`
-      : "";
+    this.#counter.textContent = many ? `${this.#index + 1} of ${this.#items.length}` : '';
   }
 
   #bindGlobalKeys(): void {
     this.#d.listen(
       document,
-      "keydown",
+      'keydown',
       ((e: KeyboardEvent) => {
         if (!this.open) return;
-        if (e.key === "Escape") {
+        if (e.key === 'Escape') {
           e.stopPropagation();
           this.close();
           return;
         }
-        if (e.key === "Tab") {
+        if (e.key === 'Tab') {
           this.#trapFocus(e);
           return;
         }
@@ -231,17 +214,16 @@ export class FilePreviewModalElement extends HTMLElement {
         if (deep && /^(INPUT|TEXTAREA|SELECT)$/.test(deep.tagName)) return;
         if (deep instanceof HTMLElement && deep.isContentEditable) return;
 
-        if (e.key === "ArrowLeft") this.go(this.#index - 1);
-        else if (e.key === "ArrowRight") this.go(this.#index + 1);
+        if (e.key === 'ArrowLeft') this.go(this.#index - 1);
+        else if (e.key === 'ArrowRight') this.go(this.#index + 1);
       }) as EventListener,
       true,
     );
   }
 
   #focusables(): HTMLElement[] {
-    const inner =
-      this.#preview.shadowRoot?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? [];
-    const outer = this.shadowRoot?.querySelectorAll<HTMLElement>(".fp-nav") ?? [];
+    const inner = this.#preview.shadowRoot?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? [];
+    const outer = this.shadowRoot?.querySelectorAll<HTMLElement>('.fp-nav') ?? [];
     return [...outer, ...inner].filter(
       (n) => n.offsetParent !== null || n.getClientRects().length > 0,
     );
@@ -277,7 +259,7 @@ export class FilePreviewModalElement extends HTMLElement {
       overflow: body.style.overflow,
       paddingRight: body.style.paddingRight,
     };
-    body.style.overflow = "hidden";
+    body.style.overflow = 'hidden';
     if (gap > 0) {
       const current = parseFloat(getComputedStyle(body).paddingRight) || 0;
       body.style.paddingRight = `${current + gap}px`;
@@ -305,6 +287,6 @@ export class FilePreviewModalElement extends HTMLElement {
   }
 }
 
-if (!customElements.get("file-preview-modal")) {
-  customElements.define("file-preview-modal", FilePreviewModalElement);
+if (!customElements.get('file-preview-modal')) {
+  customElements.define('file-preview-modal', FilePreviewModalElement);
 }

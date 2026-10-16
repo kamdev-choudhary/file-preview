@@ -55,14 +55,21 @@ export default async function archiveViewer(ctx: ViewerContext): Promise<ViewerI
     const dir = entry.name.slice(0, entry.name.length - base.length);
 
     list.append(
-      el('div', { class: 'fp-filerow', role: 'listitem', style: { paddingLeft: `${12 + depth * 14}px` } }, [
-        el('span', { class: 'fp-fileicon', text: (extensionOf(base) || '?').slice(0, 4).toUpperCase() }),
-        el('span', { class: 'fp-filename' }, [
-          dir ? el('span', { class: 'fp-filedir', text: dir }) : null,
-          el('span', { text: base }),
-        ]),
-        el('span', { class: 'fp-filesize', text: size ? formatBytes(size) : '' }),
-      ]),
+      el(
+        'div',
+        { class: 'fp-filerow', role: 'listitem', style: { paddingLeft: `${12 + depth * 14}px` } },
+        [
+          el('span', {
+            class: 'fp-fileicon',
+            text: (extensionOf(base) || '?').slice(0, 4).toUpperCase(),
+          }),
+          el('span', { class: 'fp-filename' }, [
+            dir ? el('span', { class: 'fp-filedir', text: dir }) : null,
+            el('span', { text: base }),
+          ]),
+          el('span', { class: 'fp-filesize', text: size ? formatBytes(size) : '' }),
+        ],
+      ),
     );
   }
 

@@ -2,33 +2,31 @@
   "$schema": "https://raw.githubusercontent.com/oxc-project/oxc/main/npm/oxlint/configuration_schema.json",
   "categories": {
     "correctness": "error",
-    "suspicious": "warn",
-    "perf": "warn"
+    "suspicious": "warn"
   },
   "rules": {
     "no-unused-vars": "error",
-    "eqeqeq": [
-      "error",
-      "smart"
-    ],
-    "no-console": "off"
+    "eqeqeq": ["error", "smart"],
+    "no-console": "off",
+
+    // Sequential awaits here are the design, not an oversight: net.ts pumps a
+    // ReadableStream chunk by chunk to report progress, and pptx.ts walks
+    // slides in order so it can abort between them. Promise.all would break
+    // both.
+    "no-await-in-loop": "off",
+
+    // `_data` is JSZip's internal field and the only place an entry's
+    // uncompressed size lives before decompression.
+    "no-underscore-dangle": "off",
+
+    // The `tool` factories in file-preview.ts read `this` through the closure
+    // they are defined in; hoisting them would mean threading it manually.
+    "unicorn/consistent-function-scoping": "off",
+
+    // Both call sites sort an array that was just produced by filter()/
+    // Object.keys(), so there is no caller-visible array to mutate. toSorted()
+    // would also need the ES2023 lib, which this build target predates.
+    "unicorn/no-array-sort": "off"
   },
-  "ignorePatterns": [
-    "dist",
-    "dist-demo",
-    "node_modules",
-    "public"
-  ],
-  "overrides": [
-    {
-      "files": [
-        "test/**",
-        "scripts/**",
-        "demo/**"
-      ],
-      "rules": {
-        "no-console": "off"
-      }
-    }
-  ]
+  "ignorePatterns": ["dist", "dist-demo", "node_modules", "public"]
 }

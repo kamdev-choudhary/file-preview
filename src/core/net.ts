@@ -22,7 +22,10 @@ export interface FetchBlobResult {
  * mid-flight. Falls back to a plain `.blob()` when the body is not a readable
  * stream (older Safari, some polyfills).
  */
-export async function fetchBlob(url: string, opts: FetchBlobOptions = {}): Promise<FetchBlobResult> {
+export async function fetchBlob(
+  url: string,
+  opts: FetchBlobOptions = {},
+): Promise<FetchBlobResult> {
   const { signal, headers, credentials, maxBytes, onProgress } = opts;
 
   let res: Response;

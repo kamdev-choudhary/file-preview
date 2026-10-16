@@ -116,9 +116,9 @@ export default async function pptxViewer(ctx: ViewerContext): Promise<ViewerInst
     for (const sp of doc.getElementsByTagName('p:sp')) {
       const isTitle = Boolean(
         sp.querySelector('ph[type="title"], ph[type="ctrTitle"]') ||
-          Array.from(sp.getElementsByTagName('p:ph')).some((ph) =>
-            /^(title|ctrTitle)$/.test(ph.getAttribute('type') || ''),
-          ),
+        Array.from(sp.getElementsByTagName('p:ph')).some((ph) =>
+          /^(title|ctrTitle)$/.test(ph.getAttribute('type') || ''),
+        ),
       );
 
       const paragraphs: Array<{ text: string; level: number }> = [];
@@ -127,12 +127,18 @@ export default async function pptxViewer(ctx: ViewerContext): Promise<ViewerInst
           .map((t) => t.textContent || '')
           .join('')
           .trim();
-        if (text) paragraphs.push({ text, level: Number(p.querySelector('pPr')?.getAttribute('lvl') || 0) });
+        if (text)
+          paragraphs.push({
+            text,
+            level: Number(p.querySelector('pPr')?.getAttribute('lvl') || 0),
+          });
       }
       if (!paragraphs.length) continue;
 
       if (isTitle) {
-        body.append(el('h2', { class: 'fp-slide-title', text: paragraphs.map((p) => p.text).join(' ') }));
+        body.append(
+          el('h2', { class: 'fp-slide-title', text: paragraphs.map((p) => p.text).join(' ') }),
+        );
       } else {
         const ul = el('ul', { class: 'fp-slide-list' });
         for (const p of paragraphs) {
@@ -148,16 +154,22 @@ export default async function pptxViewer(ctx: ViewerContext): Promise<ViewerInst
     for (const blip of doc.getElementsByTagName('a:blip')) {
       const id =
         blip.getAttribute('r:embed') ||
-        blip.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'embed');
+        blip.getAttributeNS(
+          'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
+          'embed',
+        );
       const target = id ? rels[id] : undefined;
       if (!target) continue;
       const url = await mediaUrl(target);
-      if (url) figures.append(el('img', { class: 'fp-slide-img', src: url, alt: '', loading: 'lazy' }));
+      if (url)
+        figures.append(el('img', { class: 'fp-slide-img', src: url, alt: '', loading: 'lazy' }));
     }
     if (figures.childElementCount) body.append(figures);
 
     if (!body.childElementCount) {
-      body.append(el('div', { class: 'fp-empty', text: 'This slide has no extractable text or images.' }));
+      body.append(
+        el('div', { class: 'fp-empty', text: 'This slide has no extractable text or images.' }),
+      );
     }
 
     // Presenter notes are genuinely useful and cheap to include.

@@ -67,7 +67,9 @@ export default async function mediaViewer(ctx: ViewerContext): Promise<ViewerIns
         await source.toBlob({ signal, onProgress: ctx.setProgress });
         const retry = new Promise<void>((resolve, reject) => {
           media.addEventListener('loadedmetadata', () => resolve(), { once: true });
-          media.addEventListener('error', () => reject(mediaErrorFor(media, source.name)), { once: true });
+          media.addEventListener('error', () => reject(mediaErrorFor(media, source.name)), {
+            once: true,
+          });
         });
         media.src = source.objectUrl();
         await retry;
@@ -86,12 +88,18 @@ export default async function mediaViewer(ctx: ViewerContext): Promise<ViewerIns
     throw new DOMException('aborted', 'AbortError');
   }
 
-  const stage = el('div', { class: isVideo ? 'fp-stage fp-stage--video' : 'fp-stage fp-stage--audio' }, [
-    isVideo ? media : el('div', { class: 'fp-audio-card' }, [
-      el('div', { class: 'fp-audio-title', text: source.name }),
-      media,
-    ]),
-  ]);
+  const stage = el(
+    'div',
+    { class: isVideo ? 'fp-stage fp-stage--video' : 'fp-stage fp-stage--audio' },
+    [
+      isVideo
+        ? media
+        : el('div', { class: 'fp-audio-card' }, [
+            el('div', { class: 'fp-audio-title', text: source.name }),
+            media,
+          ]),
+    ],
+  );
   const viewport = el('div', { class: 'fp-viewport fp-viewport--center' }, [stage]);
   container.append(viewport);
 

@@ -41,9 +41,7 @@ declare module 'mammoth/mammoth.browser.js' {
       options?: MammothOptions,
     ): Promise<MammothResult>;
     images: {
-      imgElement(
-        fn: (image: MammothImage) => Promise<{ src: string }>,
-      ): unknown;
+      imgElement(fn: (image: MammothImage) => Promise<{ src: string }>): unknown;
     };
   }
 

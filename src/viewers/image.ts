@@ -67,9 +67,7 @@ export default async function imageViewer(ctx: ViewerContext): Promise<ViewerIns
   const zoom = attachZoomPan(viewport, stage, { onChange: (s) => zoomListener?.(s) });
   d.add(zoom.destroy);
 
-  ctx.setStatus(
-    img.naturalWidth ? `${img.naturalWidth} × ${img.naturalHeight}` : '',
-  );
+  ctx.setStatus(img.naturalWidth ? `${img.naturalWidth} × ${img.naturalHeight}` : '');
 
   container.append(viewport);
 

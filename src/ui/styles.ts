@@ -851,7 +851,8 @@ file-preview { flex: 1 1 auto; min-height: 0; }
  * A constructable stylesheet when the browser supports one, else a <style>
  * node to clone. Constructable sheets are shared across every instance.
  */
-export type MadeStyles = { sheet: CSSStyleSheet; style?: undefined } | { sheet?: undefined; style: HTMLStyleElement };
+export type MadeStyles =
+  { sheet: CSSStyleSheet; style?: undefined } | { sheet?: undefined; style: HTMLStyleElement };
 
 export function makeStyles(text: string): MadeStyles {
   if (typeof CSSStyleSheet !== 'undefined' && 'replaceSync' in CSSStyleSheet.prototype) {

@@ -137,8 +137,7 @@ export class FilePreviewElement extends HTMLElement {
     const root = this.getRootNode();
     const shadowHost = root instanceof ShadowRoot ? root.host : null;
     const insideModal =
-      Boolean(this.closest('file-preview-modal')) ||
-      shadowHost?.tagName === 'FILE-PREVIEW-MODAL';
+      Boolean(this.closest('file-preview-modal')) || shadowHost?.tagName === 'FILE-PREVIEW-MODAL';
     if (!this.hasAttribute('inline') && !insideModal) {
       this.setAttribute('inline', '');
     }
@@ -160,7 +159,8 @@ export class FilePreviewElement extends HTMLElement {
     if (prev === next) return;
     if (!this.#connected) return;
     if (name === 'src' || name === 'name' || name === 'type') this.#loadFromAttributes();
-    if (name === 'toolbar') this.#toolbar.classList.toggle('is-hidden', next === 'false' || next === 'none');
+    if (name === 'toolbar')
+      this.#toolbar.classList.toggle('is-hidden', next === 'false' || next === 'none');
     if (name === 'download') this.#syncToolbar();
   }
 
@@ -355,7 +355,9 @@ export class FilePreviewElement extends HTMLElement {
     const pages = this.#pageGroup.style.display !== 'none';
     const zoom = this.#zoomGroup.style.display !== 'none';
     this.#controls.classList.toggle('is-hidden', !pages && !zoom);
-    this.#controls.querySelector('.fp-sep--controls')?.classList.toggle('is-hidden', !(pages && zoom));
+    this.#controls
+      .querySelector('.fp-sep--controls')
+      ?.classList.toggle('is-hidden', !(pages && zoom));
   }
 
   // ------------------------------------------------------------------ load
@@ -602,7 +604,9 @@ export class FilePreviewElement extends HTMLElement {
       errorPanel(error, source, {
         onRetry: () => this.reload(),
         onDownload: source ? () => this.download() : null,
-        onOpenTab: source?.url ? () => window.open(source.url, '_blank', 'noopener,noreferrer') : null,
+        onOpenTab: source?.url
+          ? () => window.open(source.url, '_blank', 'noopener,noreferrer')
+          : null,
         onOfficeViewer:
           source && canUseOfficeViewer(source, config) ? () => this.#showOfficeFrame() : null,
       }),

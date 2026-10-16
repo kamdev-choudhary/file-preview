@@ -44,7 +44,10 @@ export class PreviewError extends Error {
 }
 
 /** Wrap anything thrown into a PreviewError without losing the original. */
-export function toPreviewError(err: unknown, fallbackCode: PreviewErrorCode = 'UNKNOWN'): PreviewError {
+export function toPreviewError(
+  err: unknown,
+  fallbackCode: PreviewErrorCode = 'UNKNOWN',
+): PreviewError {
   if (err instanceof PreviewError) return err;
 
   if (err instanceof Error && err.name === 'AbortError') {

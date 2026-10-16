@@ -32,7 +32,8 @@ group('Source construction', () => {
 
   it('never touches the network during construction', () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch');
-    new Source({ url: 'https://example.com/huge.pdf' });
+    const s = new Source({ url: 'https://example.com/huge.pdf' });
+    expect(s.name).toBe('huge.pdf');
     expect(fetchSpy).not.toHaveBeenCalled();
     fetchSpy.mockRestore();
   });
@@ -108,9 +109,9 @@ group('Source byte access', () => {
   });
 
   it('downloads once and caches the result', async () => {
-    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response('body', { headers: { 'content-type': 'text/plain' } }),
-    );
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(new Response('body', { headers: { 'content-type': 'text/plain' } }));
     const s = new Source({ url: 'https://example.com/a.txt' });
     await Promise.all([s.toBlob(), s.toBlob()]);
     await s.toBlob();

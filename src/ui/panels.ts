@@ -18,10 +18,7 @@ const OFFICE_EXT = /^(docx?|docm|xlsx?|xlsm|xlsb|pptx?|pptm)$/i;
  */
 export function canUseOfficeViewer(source: Source, config: PreviewConfig): boolean {
   return Boolean(
-    config.officeViewer &&
-      OFFICE_EXT.test(source.ext) &&
-      source.url &&
-      isPublicHttpUrl(source.url),
+    config.officeViewer && OFFICE_EXT.test(source.ext) && source.url && isPublicHttpUrl(source.url),
   );
 }
 

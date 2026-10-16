@@ -172,7 +172,9 @@ export default async function pdfViewer(ctx: ViewerContext): Promise<ViewerInsta
         return;
       }
       p.rendered = false;
-      p.wrap.append(el('div', { class: 'fp-pdf-page-error', text: `Page ${p.n} failed to render` }));
+      p.wrap.append(
+        el('div', { class: 'fp-pdf-page-error', text: `Page ${p.n} failed to render` }),
+      );
     }
   }
 

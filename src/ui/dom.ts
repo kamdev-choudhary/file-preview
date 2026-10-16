@@ -29,7 +29,8 @@ export function el(tag: string, props: ElProps = {}, children: ElChild[] = []): 
     if (value == null || value === false) continue;
     if (key === 'class') node.className = String(value);
     else if (key === 'text') node.textContent = String(value);
-    else if (key === 'html') node.innerHTML = String(value); // callers must pass sanitised HTML
+    else if (key === 'html')
+      node.innerHTML = String(value); // callers must pass sanitised HTML
     else if (key === 'style' && typeof value === 'object') Object.assign(node.style, value);
     else if (key === 'dataset') Object.assign(node.dataset, value);
     else if (key.startsWith('on') && typeof value === 'function') {

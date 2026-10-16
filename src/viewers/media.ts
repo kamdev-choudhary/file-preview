@@ -1,9 +1,10 @@
 import { el, disposer } from '../ui/dom.js';
 import { PreviewError } from '../core/errors.js';
 import { Kind } from '../core/mime.js';
+import type { ViewerContext, ViewerInstance } from '../core/registry.js';
 
 /** Map a MediaError code onto something a person can act on. */
-function mediaErrorFor(media, name) {
+function mediaErrorFor(media: HTMLMediaElement, name: string): PreviewError {
   const code = media.error?.code;
   if (code === 1) return new PreviewError('ABORTED', 'Playback was cancelled.');
   if (code === 2)
@@ -28,7 +29,7 @@ function mediaErrorFor(media, name) {
  * usually fail here even though the file is perfectly fine, so the error text
  * says exactly that.
  */
-export default async function mediaViewer(ctx) {
+export default async function mediaViewer(ctx: ViewerContext): Promise<ViewerInstance> {
   const { source, container, signal } = ctx;
   const d = disposer();
   const isVideo = source.kind === Kind.VIDEO;
@@ -42,7 +43,7 @@ export default async function mediaViewer(ctx) {
 
   ctx.setStatus('Loading media…');
 
-  const ready = new Promise((resolve, reject) => {
+  const ready = new Promise<void>((resolve, reject) => {
     const ok = () => resolve();
     const fail = () => reject(mediaErrorFor(media, source.name));
     media.addEventListener('loadedmetadata', ok, { once: true });
@@ -64,8 +65,8 @@ export default async function mediaViewer(ctx) {
     if (source.isRemote) {
       try {
         await source.toBlob({ signal, onProgress: ctx.setProgress });
-        const retry = new Promise((resolve, reject) => {
-          media.addEventListener('loadedmetadata', resolve, { once: true });
+        const retry = new Promise<void>((resolve, reject) => {
+          media.addEventListener('loadedmetadata', () => resolve(), { once: true });
           media.addEventListener('error', () => reject(mediaErrorFor(media, source.name)), { once: true });
         });
         media.src = source.objectUrl();

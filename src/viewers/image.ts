@@ -1,5 +1,6 @@
 import { el, disposer, attachZoomPan } from '../ui/dom.js';
 import { PreviewError } from '../core/errors.js';
+import type { ViewerContext, ViewerInstance } from '../core/registry.js';
 
 /**
  * Images, including SVG.
@@ -9,7 +10,7 @@ import { PreviewError } from '../core/errors.js';
  * that fails do we fall back to downloading the bytes, which covers servers
  * that require auth headers an <img> tag cannot send.
  */
-export default async function imageViewer(ctx) {
+export default async function imageViewer(ctx: ViewerContext): Promise<ViewerInstance> {
   const { source, container, signal } = ctx;
   const d = disposer();
 
@@ -23,8 +24,8 @@ export default async function imageViewer(ctx) {
   const stage = el('div', { class: 'fp-stage' }, [img]);
   const viewport = el('div', { class: 'fp-viewport fp-viewport--center' }, [stage]);
 
-  const load = (src) =>
-    new Promise((resolve, reject) => {
+  const load = (src: string): Promise<void> =>
+    new Promise<void>((resolve, reject) => {
       const onLoad = () => resolve();
       const onError = () => reject(new Error('decode failed'));
       img.addEventListener('load', onLoad, { once: true });
@@ -62,7 +63,7 @@ export default async function imageViewer(ctx) {
     throw new DOMException('aborted', 'AbortError');
   }
 
-  let zoomListener = null;
+  let zoomListener: ((scale: number) => void) | null = null;
   const zoom = attachZoomPan(viewport, stage, { onChange: (s) => zoomListener?.(s) });
   d.add(zoom.destroy);
 

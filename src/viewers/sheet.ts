@@ -2,6 +2,15 @@ import { el, disposer } from '../ui/dom.js';
 import { PreviewError } from '../core/errors.js';
 import { parseCsv, toCsv } from '../core/csv.js';
 import { Kind } from '../core/mime.js';
+import type { ToolbarAction, ViewerContext, ViewerInstance } from '../core/registry.js';
+
+/** One tab's worth of grid data, already capped to what we will render. */
+interface SheetData {
+  name: string;
+  rows: string[][];
+  totalRows: number;
+  totalCols: number;
+}
 
 /**
  * Spreadsheets and delimited text, rendered as a real grid with sticky headers.
@@ -23,7 +32,7 @@ const MAX_ROWS = 2000;
 const MAX_COLS = 200;
 
 /** Spreadsheet-style column label: 0 -> A, 26 -> AA. */
-function colLabel(n) {
+function colLabel(n: number): string {
   let s = '';
   n += 1;
   while (n > 0) {
@@ -36,13 +45,12 @@ function colLabel(n) {
 
 const NUMERIC = /^-?[\d,]*\.?\d+(?:[eE][+-]?\d+)?%?$/;
 
-export default async function sheetViewer(ctx) {
+export default async function sheetViewer(ctx: ViewerContext): Promise<ViewerInstance> {
   const { source, container, signal, config } = ctx;
   const d = disposer();
 
-  /** @type {{ name: string, rows: string[][], totalRows: number, totalCols: number }[]} */
-  let sheets;
-  let copySource;
+  let sheets: SheetData[];
+  let copySource: (sheet: SheetData) => string;
 
   if (source.kind === Kind.CSV) {
     sheets = await loadDelimited(ctx);
@@ -59,10 +67,12 @@ export default async function sheetViewer(ctx) {
   const viewport = el('div', { class: 'fp-viewport fp-viewport--sheet' });
   const gridHost = el('div', { class: 'fp-grid-host' });
   const tabs = el('div', { class: 'fp-tabs', role: 'tablist' });
-  let notice = null;
-  let active = sheets[0];
+  let notice: HTMLElement | null = null;
+  const firstSheet = sheets[0];
+  if (!firstSheet) throw new PreviewError('EMPTY', 'This file has no data.');
+  let active: SheetData = firstSheet;
 
-  function renderSheet(sheet) {
+  function renderSheet(sheet: SheetData): void {
     active = sheet;
     gridHost.replaceChildren();
     notice?.remove();
@@ -126,9 +136,9 @@ export default async function sheetViewer(ctx) {
           role: 'tab',
           text: sheet.name,
           'aria-selected': String(sheet === active),
-          onClick: (e) => {
+          onClick: (e: Event) => {
             for (const t of tabs.children) t.setAttribute('aria-selected', 'false');
-            e.currentTarget.setAttribute('aria-selected', 'true');
+            (e.currentTarget as HTMLElement).setAttribute('aria-selected', 'true');
             renderSheet(sheet);
           },
         }),
@@ -141,7 +151,7 @@ export default async function sheetViewer(ctx) {
   container.append(viewport);
   renderSheet(active);
 
-  const copyAction = {
+  const copyAction: ToolbarAction = {
     id: 'csv',
     label: 'Copy sheet as CSV',
     icon: 'copy',
@@ -160,7 +170,7 @@ export default async function sheetViewer(ctx) {
 }
 
 /** CSV/TSV via the built-in parser. */
-async function loadDelimited(ctx) {
+async function loadDelimited(ctx: ViewerContext): Promise<SheetData[]> {
   const { source, signal, config } = ctx;
   ctx.setStatus('Downloading…');
   const blob = await source.toBlob({ signal, onProgress: ctx.setProgress });
@@ -185,7 +195,9 @@ async function loadDelimited(ctx) {
 }
 
 /** Binary workbooks via a host-supplied SheetJS. */
-async function loadWorkbook(ctx) {
+async function loadWorkbook(
+  ctx: ViewerContext,
+): Promise<{ sheets: SheetData[]; toCsv: (sheet: SheetData) => string }> {
   const { source, signal, config } = ctx;
   const loader = config.loaders?.xlsx;
 
@@ -199,10 +211,12 @@ async function loadWorkbook(ctx) {
   }
 
   ctx.setStatus('Loading spreadsheet engine…');
-  let XLSX;
+  // SheetJS is supplied by the host app, so it arrives as `unknown`. Narrow it
+  // to the handful of members this viewer actually touches.
+  let XLSX: SheetJsModule;
   try {
-    const mod = await loader();
-    XLSX = mod?.default && mod.default.read ? mod.default : mod;
+    const mod = (await loader()) as { default?: SheetJsModule } & SheetJsModule;
+    XLSX = mod?.default && typeof mod.default.read === 'function' ? mod.default : mod;
     if (typeof XLSX?.read !== 'function') throw new Error('loader did not return SheetJS');
   } catch (err) {
     throw new PreviewError('DEPENDENCY', 'The spreadsheet engine could not be loaded.', {
@@ -216,11 +230,12 @@ async function loadWorkbook(ctx) {
   if (signal.aborted) throw new DOMException('aborted', 'AbortError');
 
   ctx.setStatus('Parsing…');
-  let wb;
+  let wb: SheetJsWorkbook;
   try {
     wb = XLSX.read(buf, { type: 'array', cellDates: true, cellStyles: false });
   } catch (err) {
-    if (/password|encrypt/i.test(err?.message || '')) {
+    const message = err instanceof Error ? err.message : '';
+    if (/password|encrypt/i.test(message)) {
       throw new PreviewError('PASSWORD', 'This spreadsheet is password protected.', {
         cause: err,
         hint: 'Download it and open it in Excel or Numbers.',
@@ -232,7 +247,7 @@ async function loadWorkbook(ctx) {
     });
   }
 
-  const sheets = (wb.SheetNames || []).map((name) => {
+  const sheets: SheetData[] = (wb.SheetNames || []).map((name) => {
     const ws = wb.Sheets[name];
     if (!ws || !ws['!ref']) return { name, rows: [], totalRows: 0, totalCols: 0 };
     const range = XLSX.utils.decode_range(ws['!ref']);
@@ -252,4 +267,39 @@ async function loadWorkbook(ctx) {
   });
 
   return { sheets, toCsv: (s) => toCsv(s.rows) };
+}
+
+/**
+ * The slice of SheetJS this viewer uses, typed structurally.
+ *
+ * `xlsx` is an optional peer that is deliberately not installed (see the module
+ * comment), so we cannot import its types. Describing only what we call keeps
+ * the contract explicit and means a wrong loader fails at the boundary rather
+ * than somewhere deep in the render.
+ */
+interface SheetJsRange {
+  s: { r: number; c: number };
+  e: { r: number; c: number };
+}
+
+interface SheetJsWorkbook {
+  SheetNames: string[];
+  Sheets: Record<string, { '!ref'?: string } | undefined>;
+}
+
+interface SheetJsModule {
+  read(data: ArrayBuffer, opts: { type: string; cellDates: boolean; cellStyles: boolean }): SheetJsWorkbook;
+  utils: {
+    decode_range(ref: string): SheetJsRange;
+    sheet_to_json(
+      ws: unknown,
+      opts: {
+        header: 1;
+        raw: boolean;
+        defval: string;
+        blankrows: boolean;
+        range: { s: { r: number; c: number }; e: { r: number; c: number } };
+      },
+    ): string[][];
+  };
 }

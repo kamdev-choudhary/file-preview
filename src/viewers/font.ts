@@ -1,11 +1,12 @@
 import { el, disposer } from '../ui/dom.js';
 import { PreviewError } from '../core/errors.js';
+import type { ViewerContext, ViewerInstance } from '../core/registry.js';
 
 const SPECIMEN = 'The quick brown fox jumps over the lazy dog';
 const SIZES = [48, 32, 24, 18, 14];
 
 /** Font files, shown as a live specimen using the FontFace API. */
-export default async function fontViewer(ctx) {
+export default async function fontViewer(ctx: ViewerContext): Promise<ViewerInstance> {
   const { source, container, signal } = ctx;
   const d = disposer();
 
@@ -15,7 +16,7 @@ export default async function fontViewer(ctx) {
 
   // A unique family name keeps repeated previews from colliding in the registry.
   const family = `fp-font-${Math.random().toString(36).slice(2, 9)}`;
-  let face;
+  let face: FontFace;
   try {
     face = new FontFace(family, buf);
     await face.load();

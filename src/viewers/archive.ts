@@ -1,17 +1,18 @@
 import { el, disposer } from '../ui/dom.js';
 import { PreviewError, dependencyError } from '../core/errors.js';
 import { formatBytes, extensionOf } from '../core/mime.js';
+import type { ViewerContext, ViewerInstance } from '../core/registry.js';
 
 /**
  * ZIP archives — a browsable file tree rather than a blank "cannot preview".
  * JSZip is already a dependency for pptx, so this costs nothing extra.
  */
-export default async function archiveViewer(ctx) {
+export default async function archiveViewer(ctx: ViewerContext): Promise<ViewerInstance> {
   const { source, container, signal } = ctx;
   const d = disposer();
 
   ctx.setStatus('Loading archive reader…');
-  let JSZip;
+  let JSZip: typeof import('jszip');
   try {
     ({ default: JSZip } = await import('jszip'));
   } catch (err) {
@@ -22,7 +23,7 @@ export default async function archiveViewer(ctx) {
   const buf = await source.arrayBuffer({ signal, onProgress: ctx.setProgress });
   if (signal.aborted) throw new DOMException('aborted', 'AbortError');
 
-  let zip;
+  let zip: import('jszip');
   try {
     zip = await JSZip.loadAsync(buf);
   } catch (err) {
@@ -44,7 +45,10 @@ export default async function archiveViewer(ctx) {
   let totalUncompressed = 0;
 
   for (const entry of entries) {
-    const size = entry._data?.uncompressedSize ?? 0;
+    // `_data` is internal to JSZip but the only place the uncompressed size
+    // lives for a file that has not been decompressed yet.
+    const size =
+      (entry as unknown as { _data?: { uncompressedSize?: number } })._data?.uncompressedSize ?? 0;
     totalUncompressed += size;
     const depth = entry.name.split('/').length - 1;
     const base = entry.name.slice(entry.name.lastIndexOf('/') + 1);

@@ -1,5 +1,6 @@
 import { el, disposer } from '../ui/dom.js';
 import { PreviewError, dependencyError } from '../core/errors.js';
+import type { ViewerContext, ViewerInstance } from '../core/registry.js';
 
 /**
  * Word documents (.docx/.docm) via mammoth.
@@ -11,12 +12,13 @@ import { PreviewError, dependencyError } from '../core/errors.js';
  * toolbar's "Open in Office viewer" action is the honest answer, so we surface
  * any conversion warnings instead of hiding them.
  */
-export default async function docxViewer(ctx) {
+export default async function docxViewer(ctx: ViewerContext): Promise<ViewerInstance> {
   const { source, container, signal } = ctx;
   const d = disposer();
 
   ctx.setStatus('Loading document engine…');
-  let mammoth, DOMPurify;
+  let mammoth: typeof import('mammoth');
+  let DOMPurify: typeof import('dompurify').default;
   try {
     [{ default: mammoth }, { default: DOMPurify }] = await Promise.all([
       import('mammoth/mammoth.browser.js'),
@@ -31,7 +33,7 @@ export default async function docxViewer(ctx) {
   if (signal.aborted) throw new DOMException('aborted', 'AbortError');
 
   ctx.setStatus('Converting…');
-  let result;
+  let result: { value: string; messages: Array<{ type: string; message: string }> };
   try {
     result = await mammoth.convertToHtml(
       { arrayBuffer },
@@ -50,7 +52,8 @@ export default async function docxViewer(ctx) {
       },
     );
   } catch (err) {
-    if (/zip|end of central directory|corrupt/i.test(err?.message || '')) {
+    const message = err instanceof Error ? err.message : '';
+    if (/zip|end of central directory|corrupt/i.test(message)) {
       throw new PreviewError('DECODE', 'This document could not be opened.', {
         cause: err,
         hint: 'It may be a legacy .doc file renamed to .docx, or the upload may be incomplete.',

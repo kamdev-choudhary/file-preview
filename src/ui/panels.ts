@@ -2,6 +2,9 @@ import { el } from './dom.js';
 import { icon } from './icons.js';
 import { isPublicHttpUrl } from '../core/net.js';
 import { Kind, formatBytes } from '../core/mime.js';
+import type { Source } from '../core/source.js';
+import type { PreviewConfig } from '../core/config.js';
+import type { PreviewError } from '../core/errors.js';
 
 /** Office file kinds the Microsoft viewer can actually open. */
 const OFFICE_EXT = /^(docx?|docm|xlsx?|xlsm|xlsb|pptx?|pptm)$/i;
@@ -13,7 +16,7 @@ const OFFICE_EXT = /^(docx?|docm|xlsx?|xlsm|xlsb|pptx?|pptm)$/i;
  * file must be publicly reachable. So this is always an explicit user action —
  * never something the library does on its own.
  */
-export function canUseOfficeViewer(source, config) {
+export function canUseOfficeViewer(source: Source, config: PreviewConfig): boolean {
   return Boolean(
     config.officeViewer &&
       OFFICE_EXT.test(source.ext) &&
@@ -22,12 +25,12 @@ export function canUseOfficeViewer(source, config) {
   );
 }
 
-export function officeViewerUrl(url) {
+export function officeViewerUrl(url: string): string {
   return `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(url)}`;
 }
 
 /** Swap the stage over to a Microsoft-hosted iframe render. */
-export function officeFrame(source) {
+export function officeFrame(source: Source): HTMLElement {
   const frame = el('iframe', {
     class: 'fp-frame',
     src: officeViewerUrl(source.url),
@@ -40,19 +43,31 @@ export function officeFrame(source) {
   return el('div', { class: 'fp-viewport fp-viewport--frame' }, [frame]);
 }
 
-function actionButton(label, iconName, onClick, variant = '') {
-  return el(
-    'button',
-    { class: `fp-btn ${variant}`.trim(), type: 'button', onClick },
-    [el('span', { class: 'fp-btn-icon', html: icon(iconName) }), el('span', { text: label })],
-  );
+function actionButton(
+  label: string,
+  iconName: string,
+  onClick: () => void,
+  variant = '',
+): HTMLElement {
+  return el('button', { class: `fp-btn ${variant}`.trim(), type: 'button', onClick }, [
+    el('span', { class: 'fp-btn-icon', html: icon(iconName) }),
+    el('span', { text: label }),
+  ]);
+}
+
+export interface UnsupportedHandlers {
+  onDownload?: (() => void) | null;
+  onOfficeViewer?: (() => void) | null;
 }
 
 /**
  * Shown when no viewer can render the file. Not an error — the file is fine,
  * we just cannot draw it — so it reads as an offer, not a failure.
  */
-export function unsupportedPanel(source, { onDownload, onOfficeViewer } = {}) {
+export function unsupportedPanel(
+  source: Source,
+  { onDownload, onOfficeViewer }: UnsupportedHandlers = {},
+): HTMLElement {
   const label = source.ext ? source.ext.toUpperCase() : 'FILE';
   return el('div', { class: 'fp-panel' }, [
     el('div', { class: 'fp-panel-badge', text: label.slice(0, 5) }),
@@ -64,21 +79,32 @@ export function unsupportedPanel(source, { onDownload, onOfficeViewer } = {}) {
         'No preview is available for this file type.',
     }),
     el('div', { class: 'fp-panel-actions' }, [
-      onDownload && actionButton('Download', 'download', onDownload, 'is-primary'),
-      onOfficeViewer && actionButton('Open in Office viewer', 'external', onOfficeViewer),
+      onDownload ? actionButton('Download', 'download', onDownload, 'is-primary') : null,
+      onOfficeViewer ? actionButton('Open in Office viewer', 'external', onOfficeViewer) : null,
     ]),
   ]);
+}
+
+export interface ErrorHandlers {
+  onRetry?: (() => void) | null;
+  onDownload?: (() => void) | null;
+  onOfficeViewer?: (() => void) | null;
+  onOpenTab?: (() => void) | null;
 }
 
 /**
  * Error state. The recovery buttons are chosen from the error code, so the user
  * always gets the action that can actually help.
  */
-export function errorPanel(error, source, handlers = {}) {
+export function errorPanel(
+  error: PreviewError | null | undefined,
+  source: Source | null | undefined,
+  handlers: ErrorHandlers = {},
+): HTMLElement {
   const { onRetry, onDownload, onOfficeViewer, onOpenTab } = handlers;
-  const code = error?.code || 'UNKNOWN';
+  const code = error?.code ?? 'UNKNOWN';
 
-  const actions = [];
+  const actions: HTMLElement[] = [];
   // Retrying a transient network problem is the first thing worth trying.
   if (onRetry && ['NETWORK', 'CORS', 'HTTP', 'UNKNOWN', 'DECODE', 'DEPENDENCY'].includes(code)) {
     actions.push(actionButton('Try again', 'retry', onRetry, 'is-primary'));
@@ -87,20 +113,36 @@ export function errorPanel(error, source, handlers = {}) {
   if (onOpenTab && ['CORS', 'NETWORK', 'HTTP'].includes(code)) {
     actions.push(actionButton('Open in new tab', 'external', onOpenTab));
   }
-  if (onOfficeViewer) actions.push(actionButton('Open in Office viewer', 'external', onOfficeViewer));
-  if (onDownload && code !== 'CORS') actions.push(actionButton('Download', 'download', onDownload));
+  if (onOfficeViewer) {
+    actions.push(actionButton('Open in Office viewer', 'external', onOfficeViewer));
+  }
+  if (onDownload && code !== 'CORS') {
+    actions.push(actionButton('Download', 'download', onDownload));
+  }
 
   return el('div', { class: 'fp-panel fp-panel--error' }, [
     el('div', { class: 'fp-panel-icon', html: icon('alert') }),
-    el('h3', { class: 'fp-panel-title', text: error?.message || 'This file could not be previewed.' }),
+    el('h3', {
+      class: 'fp-panel-title',
+      text: error?.message || 'This file could not be previewed.',
+    }),
     error?.hint ? el('p', { class: 'fp-panel-msg', text: error.hint }) : null,
-    el('p', { class: 'fp-panel-meta', text: `${source?.name || ''}${source?.name ? ' · ' : ''}${code}` }),
+    el('p', {
+      class: 'fp-panel-meta',
+      text: `${source?.name || ''}${source?.name ? ' · ' : ''}${code}`,
+    }),
     actions.length ? el('div', { class: 'fp-panel-actions' }, actions) : null,
   ]);
 }
 
+export interface LoadingPanel {
+  node: HTMLElement;
+  setStatus(text: string): void;
+  setProgress(loaded: number, total: number | null): void;
+}
+
 /** Determinate when Content-Length was present, indeterminate otherwise. */
-export function loadingPanel() {
+export function loadingPanel(): LoadingPanel {
   const bar = el('div', { class: 'fp-progress-bar' });
   const track = el('div', { class: 'fp-progress is-indeterminate' }, [bar]);
   const label = el('div', { class: 'fp-loading-label', text: 'Loading…' });

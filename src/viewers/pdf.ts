@@ -1,5 +1,21 @@
 import { el, disposer } from '../ui/dom.js';
 import { PreviewError, dependencyError } from '../core/errors.js';
+import type { PreviewConfig } from '../core/config.js';
+import type { ViewerContext, ViewerInstance } from '../core/registry.js';
+
+type PdfjsModule = typeof import('pdfjs-dist/build/pdf.mjs');
+type PdfDocument = Awaited<ReturnType<PdfjsModule['getDocument']>['promise']>;
+type PdfPage = Awaited<ReturnType<PdfDocument['getPage']>>;
+type PdfRenderTask = ReturnType<PdfPage['render']>;
+
+/** One page's lazily-rendered slot in the scroller. */
+interface PageSlot {
+  n: number;
+  wrap: HTMLElement;
+  canvas: HTMLCanvasElement | null;
+  task: PdfRenderTask | null;
+  rendered: boolean;
+}
 
 /**
  * PDF via pdf.js.
@@ -9,12 +25,12 @@ import { PreviewError, dependencyError } from '../core/errors.js';
  * placeholder of the right aspect ratio so the scrollbar never jumps.
  */
 
-let pdfjsPromise = null;
+let pdfjsPromise: Promise<PdfjsModule> | null = null;
 
-async function loadPdfjs(config) {
+async function loadPdfjs(config: PreviewConfig): Promise<PdfjsModule> {
   if (pdfjsPromise) return pdfjsPromise;
   pdfjsPromise = (async () => {
-    let pdfjs;
+    let pdfjs: PdfjsModule;
     try {
       pdfjs = await import('pdfjs-dist/build/pdf.mjs');
     } catch (err) {
@@ -33,7 +49,7 @@ async function loadPdfjs(config) {
  * value, a bundler-resolved asset URL, then a CDN pinned to the exact version
  * that was imported (so worker and main never disagree).
  */
-function resolveWorkerSrc(pdfjs, config) {
+function resolveWorkerSrc(pdfjs: PdfjsModule, config: PreviewConfig): string {
   if (config.pdfWorkerSrc) return config.pdfWorkerSrc;
   try {
     // Vite and Rollup rewrite this to the emitted asset; webpack 5 handles it too.
@@ -43,7 +59,7 @@ function resolveWorkerSrc(pdfjs, config) {
   }
 }
 
-export default async function pdfViewer(ctx) {
+export default async function pdfViewer(ctx: ViewerContext): Promise<ViewerInstance> {
   const { source, container, signal, config } = ctx;
   const d = disposer();
 
@@ -55,7 +71,7 @@ export default async function pdfViewer(ctx) {
   if (signal.aborted) throw new DOMException('aborted', 'AbortError');
 
   ctx.setStatus('Rendering…');
-  let doc;
+  let doc: PdfDocument;
   const task = pdfjs.getDocument({
     // pdf.js transfers and detaches this buffer; hand it a copy so a retry or a
     // "Download" click still has the original bytes to work with.
@@ -76,13 +92,13 @@ export default async function pdfViewer(ctx) {
   try {
     doc = await task.promise;
   } catch (err) {
-    if (err?.name === 'PasswordException') {
+    if (err instanceof Error && err.name === 'PasswordException') {
       throw new PreviewError('PASSWORD', 'This PDF is password protected.', {
         cause: err,
         hint: 'Preview is not available for encrypted files. Download it to open in a PDF reader.',
       });
     }
-    if (err?.name === 'InvalidPDFException') {
+    if (err instanceof Error && err.name === 'InvalidPDFException') {
       throw new PreviewError('DECODE', 'This file is not a valid PDF.', {
         cause: err,
         hint: 'It may have been truncated during upload, or it may not be a PDF at all.',
@@ -95,11 +111,11 @@ export default async function pdfViewer(ctx) {
 
   const total = doc.numPages;
   const scroller = el('div', { class: 'fp-viewport fp-pdf' });
-  const pages = [];
+  const pages: PageSlot[] = [];
   let scale = 1;
   let currentPage = 1;
-  let pageListener = null;
-  let zoomListener = null;
+  let pageListener: ((page: number, total: number) => void) | null = null;
+  let zoomListener: ((scale: number) => void) | null = null;
   // Once the user zooms deliberately, stop refitting on container resize.
   let userZoomed = false;
 
@@ -128,7 +144,8 @@ export default async function pdfViewer(ctx) {
     }
   };
 
-  async function renderPage(p) {
+  async function renderPage(p: PageSlot | undefined): Promise<void> {
+    if (!p) return;
     if (p.rendered || signal.aborted) return;
     p.rendered = true; // claim it early so the observer cannot double-fire
     try {
@@ -140,7 +157,9 @@ export default async function pdfViewer(ctx) {
       canvas.style.width = `${Math.floor(viewport.width / (globalThis.devicePixelRatio || 1))}px`;
       canvas.style.height = `${Math.floor(viewport.height / (globalThis.devicePixelRatio || 1))}px`;
 
-      p.task = page.render({ canvasContext: canvas.getContext('2d'), viewport });
+      const context = canvas.getContext('2d');
+      if (!context) throw new Error('could not get a 2d canvas context');
+      p.task = page.render({ canvasContext: context, viewport });
       await p.task.promise;
       if (signal.aborted) return;
       p.canvas?.remove();
@@ -148,7 +167,7 @@ export default async function pdfViewer(ctx) {
       p.wrap.style.height = '';
       p.wrap.prepend(canvas);
     } catch (err) {
-      if (err?.name === 'RenderingCancelledException') {
+      if (err instanceof Error && err.name === 'RenderingCancelledException') {
         p.rendered = false;
         return;
       }
@@ -160,7 +179,8 @@ export default async function pdfViewer(ctx) {
   const io = new IntersectionObserver(
     (entries) => {
       for (const entry of entries) {
-        const p = pages[Number(entry.target.dataset.page) - 1];
+        const p = pages[Number((entry.target as HTMLElement).dataset.page) - 1];
+        if (!p) continue;
         if (entry.isIntersecting) {
           renderPage(p);
           // Track the page most in view for the toolbar counter.
@@ -191,7 +211,7 @@ export default async function pdfViewer(ctx) {
     }
   };
 
-  const setScale = (next) => {
+  const setScale = (next: number): void => {
     const clamped = Math.min(5, Math.max(0.25, next));
     if (Math.abs(clamped - scale) < 0.001) return;
     scale = clamped;
@@ -216,7 +236,7 @@ export default async function pdfViewer(ctx) {
   ro.observe(scroller);
   d.add(() => ro.disconnect());
 
-  const manual = (fn) => () => {
+  const manual = (fn: () => void) => (): void => {
     userZoomed = true;
     fn();
   };
@@ -224,12 +244,12 @@ export default async function pdfViewer(ctx) {
   d.listen(
     scroller,
     'wheel',
-    (e) => {
+    ((e: WheelEvent) => {
       if (!e.ctrlKey && !e.metaKey) return;
       e.preventDefault();
       userZoomed = true;
       setScale(scale * (e.deltaY < 0 ? 1.1 : 1 / 1.1));
-    },
+    }) as EventListener,
     { passive: false },
   );
 
@@ -244,15 +264,15 @@ export default async function pdfViewer(ctx) {
       userZoomed = false;
       setScale(fitWidth());
     },
-    onZoomChange: (cb) => {
+    onZoomChange: (cb: (scale: number) => void) => {
       zoomListener = cb;
       cb(scale);
     },
-    onPageChange: (cb) => {
+    onPageChange: (cb: (page: number, total: number) => void) => {
       pageListener = cb;
       cb(currentPage, total);
     },
-    goToPage: (n) => {
+    goToPage: (n: number) => {
       const p = pages[Math.min(total, Math.max(1, n)) - 1];
       if (!p) return;
       renderPage(p);

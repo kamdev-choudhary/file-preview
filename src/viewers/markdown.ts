@@ -1,5 +1,6 @@
 import { el, disposer } from '../ui/dom.js';
 import { PreviewError } from '../core/errors.js';
+import type { ToolbarAction, ViewerContext, ViewerInstance } from '../core/registry.js';
 
 /**
  * Markdown, rendered.
@@ -8,7 +9,7 @@ import { PreviewError } from '../core/errors.js';
  * a previewed file is untrusted input by definition, and it renders inside the
  * host page's shadow root, not a sandboxed frame.
  */
-export default async function markdownViewer(ctx) {
+export default async function markdownViewer(ctx: ViewerContext): Promise<ViewerInstance> {
   const { source, container, signal } = ctx;
   const d = disposer();
 
@@ -17,7 +18,7 @@ export default async function markdownViewer(ctx) {
   if (signal.aborted) throw new DOMException('aborted', 'AbortError');
 
   ctx.setStatus('Rendering…');
-  let html;
+  let html: string;
   try {
     const [{ marked }, { default: DOMPurify }] = await Promise.all([
       import('marked'),
@@ -53,7 +54,7 @@ export default async function markdownViewer(ctx) {
   ctx.setStatus('');
 
   let showSource = false;
-  const sourceToggle = {
+  const sourceToggle: ToolbarAction = {
     id: 'source',
     label: 'View source',
     icon: 'code',

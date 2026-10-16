@@ -847,7 +847,6 @@ file-preview { flex: 1 1 auto; min-height: 0; }
 }
 `;
 
-/** Build a constructable stylesheet when supported, else a <style> element. */
 /**
  * A constructable stylesheet when the browser supports one, else a <style>
  * node to clone. Constructable sheets are shared across every instance.

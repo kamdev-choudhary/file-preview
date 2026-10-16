@@ -1,5 +1,6 @@
 import { el, disposer } from '../ui/dom.js';
 import { PreviewError, dependencyError } from '../core/errors.js';
+import type { ViewerContext, ViewerInstance } from '../core/registry.js';
 
 /**
  * PowerPoint (.pptx/.pptm).
@@ -16,12 +17,12 @@ import { PreviewError, dependencyError } from '../core/errors.js';
 
 const SLIDE_RE = /^ppt\/slides\/slide(\d+)\.xml$/;
 
-export default async function pptxViewer(ctx) {
+export default async function pptxViewer(ctx: ViewerContext): Promise<ViewerInstance> {
   const { source, container, signal } = ctx;
   const d = disposer();
 
   ctx.setStatus('Loading presentation engine…');
-  let JSZip;
+  let JSZip: typeof import('jszip');
   try {
     ({ default: JSZip } = await import('jszip'));
   } catch (err) {
@@ -33,7 +34,7 @@ export default async function pptxViewer(ctx) {
   if (signal.aborted) throw new DOMException('aborted', 'AbortError');
 
   ctx.setStatus('Reading slides…');
-  let zip;
+  let zip: import('jszip');
   try {
     zip = await JSZip.loadAsync(buf);
   } catch (err) {
@@ -45,7 +46,7 @@ export default async function pptxViewer(ctx) {
 
   const slideFiles = Object.keys(zip.files)
     .filter((p) => SLIDE_RE.test(p))
-    .sort((a, b) => Number(SLIDE_RE.exec(a)[1]) - Number(SLIDE_RE.exec(b)[1]));
+    .sort((a, b) => Number(SLIDE_RE.exec(a)?.[1] ?? 0) - Number(SLIDE_RE.exec(b)?.[1] ?? 0));
 
   if (!slideFiles.length) {
     throw new PreviewError('EMPTY', 'No slides were found in this presentation.', {
@@ -54,26 +55,27 @@ export default async function pptxViewer(ctx) {
   }
 
   const parser = new DOMParser();
-  const objectUrls = [];
+  const objectUrls: string[] = [];
   d.add(() => objectUrls.forEach((u) => URL.revokeObjectURL(u)));
 
   /** relationship id -> object URL, per slide */
-  async function relMap(slidePath) {
+  async function relMap(slidePath: string): Promise<Record<string, string>> {
     const relPath = slidePath.replace(/slides\/(slide\d+\.xml)$/, 'slides/_rels/$1.rels');
     const relFile = zip.file(relPath);
     if (!relFile) return {};
     const doc = parser.parseFromString(await relFile.async('text'), 'application/xml');
-    const map = {};
+    const map: Record<string, string> = {};
     for (const rel of doc.getElementsByTagName('Relationship')) {
       const target = rel.getAttribute('Target') || '';
       if (!/image/i.test(rel.getAttribute('Type') || '')) continue;
       const resolved = target.replace(/^\.\.\//, 'ppt/').replace(/^\//, '');
-      map[rel.getAttribute('Id')] = resolved;
+      const id = rel.getAttribute('Id');
+      if (id) map[id] = resolved;
     }
     return map;
   }
 
-  async function mediaUrl(path) {
+  async function mediaUrl(path: string): Promise<string | null> {
     const file = zip.file(path);
     if (!file) return null;
     const blob = await file.async('blob');
@@ -96,9 +98,11 @@ export default async function pptxViewer(ctx) {
     index++;
     if (signal.aborted) throw new DOMException('aborted', 'AbortError');
 
-    let doc;
+    let doc: Document;
     try {
-      doc = parser.parseFromString(await zip.file(path).async('text'), 'application/xml');
+      const entry = zip.file(path);
+      if (!entry) continue;
+      doc = parser.parseFromString(await entry.async('text'), 'application/xml');
     } catch {
       continue; // a single unreadable slide should not kill the deck
     }
@@ -117,7 +121,7 @@ export default async function pptxViewer(ctx) {
           ),
       );
 
-      const paragraphs = [];
+      const paragraphs: Array<{ text: string; level: number }> = [];
       for (const p of sp.getElementsByTagName('a:p')) {
         const text = Array.from(p.getElementsByTagName('a:t'))
           .map((t) => t.textContent || '')
@@ -145,7 +149,7 @@ export default async function pptxViewer(ctx) {
       const id =
         blip.getAttribute('r:embed') ||
         blip.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'embed');
-      const target = rels[id];
+      const target = id ? rels[id] : undefined;
       if (!target) continue;
       const url = await mediaUrl(target);
       if (url) figures.append(el('img', { class: 'fp-slide-img', src: url, alt: '', loading: 'lazy' }));

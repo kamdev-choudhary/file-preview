@@ -1,6 +1,7 @@
 import { el, disposer, escapeHtml } from '../ui/dom.js';
 import { PreviewError } from '../core/errors.js';
 import { Kind, formatBytes } from '../core/mime.js';
+import type { ToolbarAction, ViewerContext, ViewerInstance } from '../core/registry.js';
 
 /**
  * Plain text, source code, JSON and raw HTML.
@@ -10,7 +11,7 @@ import { Kind, formatBytes } from '../core/mime.js';
  * Very large files are truncated with an explicit notice rather than locking
  * the main thread trying to lay out a million DOM nodes.
  */
-export default async function textViewer(ctx) {
+export default async function textViewer(ctx: ViewerContext): Promise<ViewerInstance> {
   const { source, container, signal, config } = ctx;
   const d = disposer();
 
@@ -22,7 +23,7 @@ export default async function textViewer(ctx) {
   const truncated = blob.size > limit;
   const slice = truncated ? blob.slice(0, limit) : blob;
 
-  let text;
+  let text: string;
   try {
     text = await slice.text();
   } catch (err) {
@@ -88,7 +89,7 @@ export default async function textViewer(ctx) {
   container.append(viewport);
 
   let wrapLines = false;
-  const toggleWrap = {
+  const toggleWrap: ToolbarAction = {
     id: 'wrap',
     label: 'Wrap lines',
     icon: 'wrap',
@@ -100,7 +101,7 @@ export default async function textViewer(ctx) {
     },
   };
 
-  const copy = {
+  const copy: ToolbarAction = {
     id: 'copy',
     label: 'Copy',
     icon: 'copy',

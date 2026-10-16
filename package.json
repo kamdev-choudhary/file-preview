@@ -4,14 +4,14 @@
   "description": "Framework-free universal file preview web component. Images, PDF, Office docs, media, code, archives \u2014 inline or full-screen modal.",
   "type": "module",
   "license": "MIT",
-  "author": "kamdev-bharatai (https://github.com/kamdev-bharatai)",
-  "homepage": "https://kamdev-bharatai.github.io/previewkit/",
+  "author": "kamdev-choudhary (https://github.com/kamdev-choudhary)",
+  "homepage": "https://kamdev-choudhary.github.io/previewkit/",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kamdev-bharatai/previewkit.git"
+    "url": "git+https://github.com/kamdev-choudhary/previewkit.git"
   },
   "bugs": {
-    "url": "https://github.com/kamdev-bharatai/previewkit/issues"
+    "url": "https://github.com/kamdev-choudhary/previewkit/issues"
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
@@ -98,10 +98,5 @@
     "typescript": "^5.9.3",
     "vite": "^8.2.2",
     "vitest": "^4.0.18"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild"
-    ]
   }
 }

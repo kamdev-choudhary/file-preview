@@ -1,4 +1,4 @@
-import { beforeEach, describe as group, expect, it, vi } from 'vitest';
+import { describe as group, expect, it, vi } from 'vitest';
 import { Source, toSource, toSources } from '../src/core/source.js';
 import { PreviewError } from '../src/core/errors.js';
 import { Kind } from '../src/core/mime.js';

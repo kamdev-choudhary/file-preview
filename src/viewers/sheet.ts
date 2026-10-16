@@ -46,7 +46,7 @@ function colLabel(n: number): string {
 const NUMERIC = /^-?[\d,]*\.?\d+(?:[eE][+-]?\d+)?%?$/;
 
 export default async function sheetViewer(ctx: ViewerContext): Promise<ViewerInstance> {
-  const { source, container, signal, config } = ctx;
+  const { source, container, signal } = ctx;
   const d = disposer();
 
   let sheets: SheetData[];

@@ -439,8 +439,10 @@ export function describe({ name = "", mime = "", bytes, size }: DescribeInput = 
     else if (declared.startsWith("audio/")) kind = Kind.AUDIO;
     else if (declared.startsWith("video/")) kind = Kind.VIDEO;
     else if (declared === "application/pdf") kind = Kind.PDF;
-    else if (declared === "application/json")
-      ((kind = Kind.JSON), (lang = "json"));
+    else if (declared === "application/json") {
+      kind = Kind.JSON;
+      lang = "json";
+    }
     else if (declared.startsWith("text/")) kind = Kind.TEXT;
     if (kind !== Kind.UNKNOWN) resolvedMime = declared;
   }

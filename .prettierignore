@@ -1,0 +1,5 @@
+dist
+dist-demo
+public/samples
+pnpm-lock.yaml
+CHANGELOG.md

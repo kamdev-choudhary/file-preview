@@ -1,8 +1,9 @@
-import {
-  openPreview,
-  renderPreview,
-  configure,
-  formatBytes,
+import { configure, formatBytes, openPreview } from "../src/index.js";
+import type {
+  ChangeDetail,
+  ErrorDetail,
+  FilePreviewElement,
+  LoadDetail,
 } from "../src/index.js";
 
 /**
@@ -21,32 +22,45 @@ configure({
    * without any of this.
    */
   loaders: {
-    xlsx: () => import("https://cdn.sheetjs.com/xlsx-0.20.3/package/xlsx.mjs"),
+    // A bare remote URL is not something the bundler can resolve, so it is
+    // fetched at runtime via a dynamic specifier the bundler leaves alone.
+    xlsx: () => import(/* @vite-ignore */ SHEETJS_CDN),
   },
 });
 
-const $ = (sel) => document.querySelector(sel);
-const logEl = $("#log");
-let logLines = [];
+const SHEETJS_CDN = "https://cdn.sheetjs.com/xlsx-0.20.3/package/xlsx.mjs";
 
-function log(kind, detail) {
+/** Query helper that fails loudly instead of handing back null. */
+const $ = <T extends Element = HTMLElement>(sel: string): T => {
+  const node = document.querySelector<T>(sel);
+  if (!node) throw new Error(`demo: no element matched "${sel}"`);
+  return node;
+};
+
+const logEl = $("#log");
+let logLines: string[] = [];
+
+function log(kind: string, detail: unknown): void {
   const time = new Date().toLocaleTimeString();
-  let line;
+  let line: string;
   if (kind === "fp-error") {
-    line = `${time}  ${kind.padEnd(10)} ${detail.error?.code ?? "?"} — ${detail.error?.message ?? ""}`;
+    const { error } = detail as ErrorDetail;
+    line = `${time}  ${kind.padEnd(10)} ${error?.code ?? "?"} — ${error?.message ?? ""}`;
   } else if (kind === "fp-load") {
-    line = `${time}  ${kind.padEnd(10)} viewer="${detail.viewer}" file="${detail.source?.name}" (${formatBytes(detail.source?.size) || "size unknown"})`;
+    const { source, viewer } = detail as LoadDetail;
+    line = `${time}  ${kind.padEnd(10)} viewer="${viewer}" file="${source?.name}" (${formatBytes(source?.size) || "size unknown"})`;
   } else {
-    line = `${time}  ${kind.padEnd(10)} ${JSON.stringify(detail?.index ?? detail ?? {})}`;
+    const index = (detail as ChangeDetail | undefined)?.index;
+    line = `${time}  ${kind.padEnd(10)} ${JSON.stringify(index ?? {})}`;
   }
   logLines = [line, ...logLines].slice(0, 40);
   logEl.textContent = logLines.join("\n");
 }
 
 const events = {
-  onLoad: (d) => log("fp-load", d),
-  onError: (d) => log("fp-error", d),
-  onChange: (d) => log("fp-change", d),
+  onLoad: (d: LoadDetail) => log("fp-load", d),
+  onError: (d: ErrorDetail) => log("fp-error", d),
+  onChange: (d: ChangeDetail) => log("fp-change", d),
 };
 
 // --------------------------------------------------------------- sample set
@@ -89,10 +103,10 @@ const SAMPLES = [
 ];
 
 // Vite serves `public/` from the site root, so these are absolute paths.
-const sampleUrl = (f) => new URL(`/samples/${f}`, location.href).href;
+const sampleUrl = (f: string): string => new URL(`/samples/${f}`, location.href).href;
 const allSampleUrls = () => SAMPLES.map((s) => sampleUrl(s.file));
 
-function extBadge(file) {
+function extBadge(file: string): string {
   return (file.split(".").pop() || "?").toUpperCase();
 }
 
@@ -107,8 +121,8 @@ SAMPLES.forEach((sample, i) => {
       <span class="card-title"></span>
       <span class="card-note"></span>
     </span>`;
-  card.querySelector(".card-title").textContent = sample.label;
-  card.querySelector(".card-note").textContent = sample.note;
+  card.querySelector(".card-title")!.textContent = sample.label;
+  card.querySelector(".card-note")!.textContent = sample.note;
   // Opening the whole set as a gallery makes the arrow-key navigation obvious.
   card.addEventListener("click", () =>
     openPreview(allSampleUrls(), { index: i, ...events }),
@@ -122,9 +136,9 @@ $("#open-gallery").addEventListener("click", () =>
 
 // ------------------------------------------------------------------ inline
 
-const inline = $("#inline");
-inline.addEventListener("fp-load", (e) => log("fp-load", e.detail));
-inline.addEventListener("fp-error", (e) => log("fp-error", e.detail));
+const inline = $<FilePreviewElement>("#inline");
+inline.addEventListener("fp-load", (e) => log("fp-load", (e as CustomEvent).detail));
+inline.addEventListener("fp-error", (e) => log("fp-error", (e as CustomEvent).detail));
 
 const INLINE_SET = [
   "sample.pdf",
@@ -146,13 +160,13 @@ INLINE_SET.forEach((file, i) => {
   });
   chips.append(chip);
 });
-inline.file = sampleUrl(INLINE_SET[0]);
+inline.file = sampleUrl(INLINE_SET[0]!);
 
 // ------------------------------------------------------------- URL preview
 
 $("#url-form").addEventListener("submit", (e) => {
   e.preventDefault();
-  const url = $("#url-input").value.trim();
+  const url = $<HTMLInputElement>("#url-input").value.trim();
   if (url) openPreview(url, events);
 });
 
@@ -217,27 +231,28 @@ for (const err of ERRORS) {
   card.innerHTML = `<span class="card-body">
       <span class="card-title"></span><span class="card-note"></span>
     </span>`;
-  card.querySelector(".card-title").textContent = err.label;
-  card.querySelector(".card-note").textContent = err.note;
+  card.querySelector(".card-title")!.textContent = err.label;
+  card.querySelector(".card-note")!.textContent = err.note;
   card.addEventListener("click", err.open);
   errorsEl.append(card);
 }
 
 // ---------------------------------------------------------- local files
 
-$("#pick").addEventListener("click", () => $("#file-input").click());
-$("#file-input").addEventListener("change", (e) => {
-  const files = [...e.target.files];
+const fileInput = $<HTMLInputElement>("#file-input");
+$("#pick").addEventListener("click", () => fileInput.click());
+fileInput.addEventListener("change", () => {
+  const files = [...(fileInput.files ?? [])];
   if (files.length) openPreview(files, events);
-  e.target.value = "";
+  fileInput.value = "";
 });
 
 // Drag and drop anywhere on the page.
 const dropzone = $("#dropzone");
 let dragDepth = 0;
 
-window.addEventListener("dragenter", (e) => {
-  if (![...(e.dataTransfer?.types || [])].includes("Files")) return;
+window.addEventListener("dragenter", (e: DragEvent) => {
+  if (![...(e.dataTransfer?.types ?? [])].includes("Files")) return;
   dragDepth++;
   dropzone.classList.add("is-active");
 });
@@ -246,11 +261,11 @@ window.addEventListener("dragleave", () => {
   dragDepth = Math.max(0, dragDepth - 1);
   if (!dragDepth) dropzone.classList.remove("is-active");
 });
-window.addEventListener("drop", (e) => {
+window.addEventListener("drop", (e: DragEvent) => {
   e.preventDefault();
   dragDepth = 0;
   dropzone.classList.remove("is-active");
-  const files = [...(e.dataTransfer?.files || [])];
+  const files = [...(e.dataTransfer?.files ?? [])];
   if (files.length) openPreview(files, events);
 });
 

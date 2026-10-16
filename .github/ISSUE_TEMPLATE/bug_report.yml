@@ -1,0 +1,61 @@
+name: Bug report
+description: A file that will not preview, or previews wrongly.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A file that reproduces the problem is worth more than anything else you
+        can give me. If you cannot share it, the detection output below is the
+        next best thing.
+
+  - type: input
+    id: version
+    attributes:
+      label: previewkit version
+      placeholder: 0.2.0
+    validations:
+      required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and OS
+      placeholder: Chrome 140 on macOS 15
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: Include the error code from the panel or the `fp-error` event if there was one.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected instead
+    validations:
+      required: true
+
+  - type: textarea
+    id: detection
+    attributes:
+      label: Detection output
+      description: |
+        Run this and paste the result — it tells me how the file was identified,
+        which is usually where the problem is.
+      value: |
+        ```js
+        import { describe } from 'previewkit';
+        console.log(describe({ name: file.name, mime: file.type, size: file.size }));
+        ```
+      render: shell
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction
+      description: A code snippet, or a link to a StackBlitz/CodeSandbox.

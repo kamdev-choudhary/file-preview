@@ -1,0 +1,59 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'npm dist-tag to publish under'
+        required: false
+        default: latest
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    # To require a manual approval before each publish, create a "release"
+    # environment under Settings -> Environments, scope NPM_TOKEN to it, and
+    # add `environment: release` here.
+    permissions:
+      contents: read
+      # Required for npm provenance: npm signs the package against this run.
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Verify before publishing
+        run: pnpm run verify
+
+      - name: Refuse to publish a tag that disagrees with package.json
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          pkg="$(node -p "require('./package.json').version")"
+          tag="${GITHUB_REF_NAME#v}"
+          if [ "$pkg" != "$tag" ]; then
+            echo "::error::tag $tag does not match package.json version $pkg"
+            exit 1
+          fi
+
+      # Needs an NPM_TOKEN repo secret (an npm automation token). Once the
+      # package exists on npm you can switch it to Trusted Publishing and drop
+      # the token entirely — provenance already relies on this job's OIDC id.
+      - name: Publish
+        run: pnpm publish --provenance --no-git-checks --tag "${{ inputs.tag || 'latest' }}"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

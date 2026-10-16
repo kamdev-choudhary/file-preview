@@ -1,4 +1,10 @@
-# @quartix/file-preview
+# previewkit
+
+[![npm](https://img.shields.io/npm/v/previewkit?color=0b7285)](https://www.npmjs.com/package/previewkit)
+[![CI](https://github.com/kamdev-choudhary/previewkit/actions/workflows/ci.yml/badge.svg)](https://github.com/kamdev-choudhary/previewkit/actions/workflows/ci.yml)
+[![entry size](https://img.shields.io/badge/entry-17%20kB%20gzip-0b7285)](#why-this-one)
+[![types](https://img.shields.io/npm/types/previewkit)](https://www.npmjs.com/package/previewkit)
+[![license](https://img.shields.io/npm/l/previewkit)](./LICENSE)
 
 A framework-free web component that previews **almost any file** — images, PDFs, Word,
 PowerPoint, spreadsheets, video, audio, code, Markdown, archives and fonts — from a URL,
@@ -7,22 +13,28 @@ a `File`, a `Blob`, an `ArrayBuffer` or a data URI.
 Drop it inline in a page, or open it full-screen in a Drive-style modal.
 
 ```js
-import { openPreview } from '@quartix/file-preview';
+import { openPreview } from 'previewkit';
 
 openPreview('https://example.com/report.pdf');
 ```
+
+**[Live demo →](https://kamdev-choudhary.github.io/previewkit/)**
 
 ---
 
 ## Why this one
 
 - **No framework.** Two custom elements. Works in React, Vue, Svelte, Angular, or plain HTML.
-- **Nothing loads until it's needed.** The entry bundle is ~15 kB gzipped. pdf.js, mammoth
-  and JSZip live in separate chunks fetched only when you actually open that file type.
+- **Nothing loads until it's needed.** The entry bundle is ~17 kB gzipped. pdf.js, mammoth,
+  JSZip and each syntax-highlighting grammar live in separate chunks fetched only when you
+  actually open that file type. Previewing a `.js` file pulls ~12 kB of highlighter, not the
+  whole 59 kB grammar bundle.
 - **Detection that isn't fooled.** Magic bytes outrank the file extension, which outranks the
   server's `Content-Type`. A PNG named `.txt` still renders as an image.
 - **Errors you can act on.** Every failure is typed (`CORS`, `HTTP`, `PASSWORD`, `TOO_LARGE`…)
   and the panel offers the recovery that actually applies — retry, open in a new tab, download.
+- **Written in TypeScript.** The published `.d.ts` is generated from the source, so the types
+  cannot drift from what the code actually accepts.
 - **Styling stays yours.** Everything is in a shadow root; theme it with CSS custom properties.
 
 ---
@@ -30,8 +42,10 @@ openPreview('https://example.com/report.pdf');
 ## Install
 
 ```bash
-npm install @quartix/file-preview
+pnpm add previewkit     # or: npm install previewkit · yarn add previewkit
 ```
+
+ESM only, no build step required, no peer dependencies you must install.
 
 Binary spreadsheets (`.xlsx`, `.xls`, `.ods`) need one extra step — see
 [Spreadsheets](#spreadsheets-xlsx-xls-ods). CSV and TSV work out of the box.
@@ -43,7 +57,7 @@ Binary spreadsheets (`.xlsx`, `.xls`, `.ods`) need one extra step — see
 ### Full-screen modal
 
 ```js
-import { openPreview } from '@quartix/file-preview';
+import { openPreview } from 'previewkit';
 
 // A URL
 openPreview('https://example.com/contract.docx');
@@ -62,13 +76,13 @@ openPreview([fileA, fileB, fileC], { index: 1 });
 ```
 
 ```js
-import '@quartix/file-preview'; // registers the elements
+import 'previewkit'; // registers the elements
 ```
 
 Or imperatively:
 
 ```js
-import { renderPreview } from '@quartix/file-preview';
+import { renderPreview } from 'previewkit';
 
 renderPreview('#viewer', myFile, { minHeight: '600px', bordered: true });
 ```
@@ -203,7 +217,7 @@ await el.download();
 Call once at startup.
 
 ```js
-import { configure } from '@quartix/file-preview';
+import { configure } from 'previewkit';
 
 configure({
   maxBytes: 100 * 1024 * 1024, // refuse to buffer files larger than this
@@ -324,7 +338,7 @@ A browser cannot distinguish a CORS rejection from a dead server — both surfac
 Register your own, or override a built-in by reusing its `id`. Highest score wins.
 
 ```js
-import { registerViewer } from '@quartix/file-preview';
+import { registerViewer } from 'previewkit';
 
 registerViewer({
   id: 'dicom',
@@ -356,7 +370,7 @@ export default async function dicomViewer({ source, container, signal, setStatus
 
 ```jsx
 import { useEffect, useRef } from 'react';
-import '@quartix/file-preview';
+import 'previewkit';
 
 export function Preview({ file }) {
   const ref = useRef(null);
@@ -377,7 +391,7 @@ export function Preview({ file }) {
 </template>
 
 <script setup>
-import '@quartix/file-preview';
+import 'previewkit';
 defineProps({ url: String });
 </script>
 ```
@@ -418,26 +432,39 @@ elements, and shadow DOM. No IE, no legacy Edge.
 Previewed files are untrusted input, and this library treats them that way:
 
 - Markdown and `.docx` HTML are sanitised with **DOMPurify** before touching the DOM.
+- `.html` files are shown as highlighted **source**, never rendered — rendering a previewed
+  HTML file would execute it in your origin.
 - The Office Online fallback runs in a sandboxed `<iframe>` with `referrerpolicy="no-referrer"`,
   and is only ever reachable by explicit user action.
-- pdf.js runs with `isEvalSupported: false`.
+- pdf.js is pinned to v6+, which has no eval-based rendering path at all. (Earlier versions
+  needed `isEvalSupported: false`; the option no longer exists because the code path is gone.)
 - SheetJS is not bundled, for the reasons above.
+- `maxBytes` is enforced from the `Content-Length` _and_ while streaming, so a hostile header
+  cannot be used to exhaust memory.
 
 Everything else is parsed locally — no file content is uploaded anywhere.
+
+Found something? Please report it privately — see [SECURITY.md](./SECURITY.md).
 
 ---
 
 ## Development
 
+Requires Node 20.19+ or 22.12+ and [pnpm](https://pnpm.io).
+
 ```bash
-npm install
-node scripts/make-samples.mjs   # generate test fixtures
-npm run dev                     # demo at localhost:5173
-npm run build                   # library build into dist/
+corepack enable       # makes the pinned pnpm available
+pnpm install
+pnpm samples          # generate the demo's test fixtures
+pnpm dev              # demo at localhost:5173
+pnpm verify           # lint, typecheck, test, build, size budget
 ```
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for how the code is laid out and what the
+size budget means in practice.
 
 ---
 
 ## License
 
-MIT
+[MIT](./LICENSE)

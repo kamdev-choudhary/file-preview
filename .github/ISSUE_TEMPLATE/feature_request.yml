@@ -1,0 +1,38 @@
+name: Feature request
+description: A format, a capability, or an API you need.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do
+      description: Describe the problem, not the solution you have in mind.
+    validations:
+      required: true
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: What you think should happen
+
+  - type: dropdown
+    id: weight
+    attributes:
+      label: Would this need a new dependency?
+      description: |
+        The entry bundle has a size budget and heavy parsers are lazily loaded.
+        A format needing a large new parser is still possible, but it will be
+        opt-in rather than bundled.
+      options:
+        - 'No, or I am not sure'
+        - 'Yes, and I think it is worth it'
+    validations:
+      required: true
+
+  - type: textarea
+    id: workaround
+    attributes:
+      label: What you are doing instead today
+      description: |
+        `registerViewer()` lets you add a viewer from outside the library — if
+        you tried that, say what was awkward about it.

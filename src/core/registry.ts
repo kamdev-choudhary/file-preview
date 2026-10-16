@@ -1,4 +1,52 @@
 import { Kind } from './mime.js';
+import type { FileKind } from './mime.js';
+import type { Source } from './source.js';
+import type { PreviewConfig } from './config.js';
+
+/** A button a viewer contributes to the toolbar. */
+export interface ToolbarAction {
+  id: string;
+  /** Mutable: a toggle action may rewrite its own label when it fires. */
+  label: string;
+  icon?: string;
+  toggled?: boolean;
+  run(): void | Promise<void>;
+}
+
+/** What the host element hands a viewer when it mounts. */
+export interface ViewerContext {
+  source: Source;
+  container: HTMLElement;
+  signal: AbortSignal;
+  config: PreviewConfig;
+  setStatus(text: string): void;
+  setProgress(loaded: number, total: number | null): void;
+  requestFallback(reason?: Error): void;
+}
+
+/** What a viewer hands back. Every member beyond `element` is optional. */
+export interface ViewerInstance {
+  element?: HTMLElement;
+  destroy?(): void;
+  actions?: ToolbarAction[];
+  pageCount?: number;
+  goToPage?(page: number): void;
+  onPageChange?(cb: (page: number, total: number) => void): void;
+  zoomIn?(): void;
+  zoomOut?(): void;
+  zoomReset?(): void;
+  onZoomChange?(cb: (scale: number) => void): void;
+}
+
+export type ViewerFactory = (ctx: ViewerContext) => Promise<ViewerInstance> | ViewerInstance;
+
+export interface ViewerDefinition {
+  id: string;
+  label: string;
+  /** Higher wins. Return 0 to decline. Later registrations win ties. */
+  match(source: Source): number;
+  load(): Promise<{ default: ViewerFactory }>;
+}
 
 /**
  * Viewer registry.
@@ -11,47 +59,11 @@ import { Kind } from './mime.js';
  * `match` returns a priority score; the highest non-zero wins. Custom viewers
  * registered later win ties, so an app can override a built-in by returning a
  * higher score for the types it cares about.
- *
- * @typedef {{
- *   id: string,
- *   label: string,
- *   match: (source: import('./source.js').Source) => number,
- *   load: () => Promise<{ default: ViewerFactory }>,
- * }} ViewerDef
- *
- * @typedef {(ctx: ViewerContext) => Promise<ViewerInstance> | ViewerInstance} ViewerFactory
- *
- * @typedef {{
- *   source: import('./source.js').Source,
- *   container: HTMLElement,
- *   signal: AbortSignal,
- *   config: ReturnType<typeof import('./config.js').getConfig>,
- *   setStatus: (text: string) => void,
- *   setProgress: (loaded: number, total: number | null) => void,
- *   requestFallback: (reason?: Error) => void,
- * }} ViewerContext
- *
- * @typedef {{
- *   element?: HTMLElement,
- *   destroy?: () => void,
- *   actions?: ToolbarAction[],
- *   pageCount?: number,
- *   onPageChange?: (cb: (page: number, total: number) => void) => void,
- *   goToPage?: (page: number) => void,
- *   zoomIn?: () => void,
- *   zoomOut?: () => void,
- *   zoomReset?: () => void,
- *   onZoomChange?: (cb: (scale: number) => void) => void,
- * }} ViewerInstance
- *
- * @typedef {{ id: string, label: string, icon?: string, run: () => void, toggled?: boolean }} ToolbarAction
  */
+const viewers: ViewerDefinition[] = [];
 
-/** @type {ViewerDef[]} */
-const viewers = [];
-
-/** @param {ViewerDef} def */
-export function registerViewer(def) {
+/** Register a custom viewer, or override a built-in by reusing its id. */
+export function registerViewer(def: ViewerDefinition): () => void {
   if (!def?.id || typeof def.match !== 'function' || typeof def.load !== 'function') {
     throw new TypeError('registerViewer() needs { id, match, load }');
   }
@@ -65,18 +77,21 @@ export function registerViewer(def) {
   };
 }
 
-export function listViewers() {
+export function listViewers(): ViewerDefinition[] {
   return viewers.slice();
 }
 
 /**
  * Best viewer for a source, or null when nothing can render it.
  * Later registrations win ties so user overrides beat built-ins.
- * @param {import('./source.js').Source} source
- * @param {Set<string>} [exclude]  Viewer ids already tried and failed.
+ *
+ * @param exclude Viewer ids already tried and failed.
  */
-export function resolveViewer(source, exclude) {
-  let best = null;
+export function resolveViewer(
+  source: Source,
+  exclude?: ReadonlySet<string>,
+): ViewerDefinition | null {
+  let best: ViewerDefinition | null = null;
   let bestScore = 0;
   for (const v of viewers) {
     if (exclude?.has(v.id)) continue;
@@ -98,7 +113,10 @@ export function resolveViewer(source, exclude) {
 // Built-ins. Order here is only cosmetic; `match` scores decide the winner.
 // ---------------------------------------------------------------------------
 
-const kindIs = (...kinds) => (s) => (kinds.includes(s.kind) ? 1 : 0);
+const kindIs =
+  (...kinds: FileKind[]) =>
+  (s: Source): number =>
+    kinds.includes(s.kind) ? 1 : 0;
 
 registerViewer({
   id: 'image',

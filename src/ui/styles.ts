@@ -9,7 +9,7 @@
  * Dark mode follows the OS by default; `theme="dark"` / `theme="light"` on the
  * element forces it either way.
  */
-export const css = `
+export const css: string = `
 :host {
   --fp-bg: #ffffff;
   --fp-bg-sunken: #f4f5f7;
@@ -752,7 +752,7 @@ export const css = `
  * Styles for the modal host element. Kept separate because the modal owns the
  * backdrop and the viewport-sized shell, while the inline element does not.
  */
-export const modalCss = `
+export const modalCss: string = `
 :host {
   position: fixed;
   inset: 0;
@@ -848,7 +848,13 @@ file-preview { flex: 1 1 auto; min-height: 0; }
 `;
 
 /** Build a constructable stylesheet when supported, else a <style> element. */
-export function makeStyles(text) {
+/**
+ * A constructable stylesheet when the browser supports one, else a <style>
+ * node to clone. Constructable sheets are shared across every instance.
+ */
+export type MadeStyles = { sheet: CSSStyleSheet; style?: undefined } | { sheet?: undefined; style: HTMLStyleElement };
+
+export function makeStyles(text: string): MadeStyles {
   if (typeof CSSStyleSheet !== 'undefined' && 'replaceSync' in CSSStyleSheet.prototype) {
     try {
       const sheet = new CSSStyleSheet();
@@ -864,7 +870,7 @@ export function makeStyles(text) {
 }
 
 /** Attach either representation to a shadow root. */
-export function applyStyles(root, made) {
+export function applyStyles(root: ShadowRoot, made: MadeStyles): void {
   if (made.sheet) root.adoptedStyleSheets = [...root.adoptedStyleSheets, made.sheet];
   else root.append(made.style.cloneNode(true));
 }

@@ -1,6 +1,62 @@
 import { describe, filenameFromUrl, formatBytes } from './mime.js';
+import type { FileKind, FileTypeDescriptor } from './mime.js';
 import { fetchBlob, isSameOriginOrData } from './net.js';
 import { PreviewError, toPreviewError } from './errors.js';
+
+/** A file described by URL plus optional metadata the server may not provide. */
+export interface FileDescriptor {
+  url?: string;
+  src?: string;
+  href?: string;
+  blob?: Blob;
+  file?: File | Blob;
+  data?: ArrayBuffer | ArrayBufferView | Blob | string;
+  buffer?: ArrayBuffer | ArrayBufferView | Blob | string;
+  name?: string;
+  filename?: string;
+  type?: string;
+  mime?: string;
+  contentType?: string;
+  size?: number;
+  headers?: Record<string, string>;
+  credentials?: RequestCredentials;
+  maxBytes?: number;
+}
+
+/** Anything the library accepts as "a file". */
+export type PreviewInput =
+  | string
+  | File
+  | Blob
+  | ArrayBuffer
+  | ArrayBufferView
+  | FileDescriptor
+  | Source;
+
+/** Defaults applied to every input in one call. */
+export interface SourceDefaults {
+  name?: string | undefined;
+  type?: string | undefined;
+  maxBytes?: number | undefined;
+  headers?: Record<string, string> | undefined;
+  credentials?: RequestCredentials | undefined;
+}
+
+export interface SourceInit {
+  name?: string | undefined;
+  mime?: string | undefined;
+  size?: number | undefined;
+  url?: string | undefined;
+  blob?: Blob | null | undefined;
+  headers?: Record<string, string> | undefined;
+  credentials?: RequestCredentials | undefined;
+  maxBytes?: number | undefined;
+}
+
+export interface ReadOptions {
+  signal?: AbortSignal | undefined;
+  onProgress?: ((loaded: number, total: number | null) => void) | undefined;
+}
 
 /**
  * One normalised handle to "a file", whatever the caller actually passed.
@@ -12,15 +68,23 @@ import { PreviewError, toPreviewError } from './errors.js';
  * download exactly once, cached for the lifetime of the Source.
  */
 export class Source {
-  /**
-   * @param {{
-   *   name?: string, mime?: string, size?: number,
-   *   url?: string, blob?: Blob,
-   *   headers?: Record<string,string>, credentials?: RequestCredentials,
-   *   maxBytes?: number,
-   * }} init
-   */
-  constructor(init) {
+  url: string;
+  blob: Blob | null;
+  headers: Record<string, string> | undefined;
+  credentials: RequestCredentials | undefined;
+  maxBytes: number | undefined;
+  name: string;
+  /** The MIME the caller or server claimed, before detection weighed in. */
+  declaredMime: string;
+  size: number | undefined;
+  descriptor: FileTypeDescriptor;
+
+  #objectUrl = '';
+  #blobPromise: Promise<Blob> | null = null;
+  #sniffed = false;
+  #destroyed = false;
+
+  constructor(init: SourceInit) {
     this.url = init.url || '';
     this.blob = init.blob || null;
     this.headers = init.headers;
@@ -31,30 +95,31 @@ export class Source {
     this.declaredMime = init.mime || this.blob?.type || '';
     this.size = init.size ?? this.blob?.size ?? undefined;
 
-    /** @type {ReturnType<typeof describe>} */
-    this.descriptor = describe({ name: this.name, mime: this.declaredMime, size: this.size });
-
-    this._objectUrl = '';
-    /** @type {Promise<Blob>|null} */
-    this._blobPromise = null;
-    this._sniffed = false;
-    this._destroyed = false;
+    this.descriptor = describe({
+      name: this.name,
+      mime: this.declaredMime,
+      size: this.size,
+    });
   }
 
-  get kind() {
+  get kind(): FileKind {
     return this.descriptor.kind;
   }
-  get mime() {
+
+  get mime(): string {
     return this.descriptor.mime;
   }
-  get ext() {
+
+  get ext(): string {
     return this.descriptor.ext;
   }
-  get sizeLabel() {
+
+  get sizeLabel(): string {
     return formatBytes(this.size);
   }
+
   /** True when bytes live on a remote server we may not be allowed to read. */
-  get isRemote() {
+  get isRemote(): boolean {
     return Boolean(this.url) && !this.blob && !isSameOriginOrData(this.url);
   }
 
@@ -63,29 +128,26 @@ export class Source {
    * URL (streams, no memory cost, no CORS requirement for media elements) and
    * only materialises a blob: URL when the bytes are already local.
    */
-  get displayUrl() {
+  get displayUrl(): string {
     if (this.url && !this.blob) return this.url;
     if (this.blob) return this.objectUrl();
     return '';
   }
 
   /** Lazily created blob: URL, revoked in destroy(). */
-  objectUrl() {
+  objectUrl(): string {
     if (!this.blob) return this.url;
-    if (!this._objectUrl) this._objectUrl = URL.createObjectURL(this.blob);
-    return this._objectUrl;
+    if (!this.#objectUrl) this.#objectUrl = URL.createObjectURL(this.blob);
+    return this.#objectUrl;
   }
 
-  /**
-   * Download (once) and cache the bytes.
-   * @param {{ signal?: AbortSignal, onProgress?: (loaded:number,total:number|null)=>void }} [opts]
-   */
-  async toBlob(opts = {}) {
+  /** Download (once) and cache the bytes. */
+  async toBlob(opts: ReadOptions = {}): Promise<Blob> {
     if (this.blob) return this.blob;
-    if (this._blobPromise) return this._blobPromise;
+    if (this.#blobPromise) return this.#blobPromise;
     if (!this.url) throw new PreviewError('EMPTY', 'This preview has no file to show.');
 
-    this._blobPromise = (async () => {
+    this.#blobPromise = (async () => {
       const { blob, mime, filename } = await fetchBlob(this.url, {
         signal: opts.signal,
         headers: this.headers,
@@ -100,25 +162,23 @@ export class Source {
       // already worked out.
       if (filename && !/\./.test(this.name)) this.name = filename;
       if (mime && !this.declaredMime) this.declaredMime = mime;
-      this._redescribe();
+      this.#redescribe();
       return blob;
-    })().catch((err) => {
+    })().catch((err: unknown) => {
       // Don't cache failures; a retry should genuinely retry.
-      this._blobPromise = null;
+      this.#blobPromise = null;
       throw toPreviewError(err);
     });
 
-    return this._blobPromise;
+    return this.#blobPromise;
   }
 
-  /** @param {{ signal?: AbortSignal, onProgress?: Function }} [opts] */
-  async arrayBuffer(opts) {
+  async arrayBuffer(opts?: ReadOptions): Promise<ArrayBuffer> {
     const blob = await this.toBlob(opts);
     return blob.arrayBuffer();
   }
 
-  /** @param {{ signal?: AbortSignal, onProgress?: Function }} [opts] */
-  async text(opts) {
+  async text(opts?: ReadOptions): Promise<string> {
     const blob = await this.toBlob(opts);
     return blob.text();
   }
@@ -128,16 +188,16 @@ export class Source {
    * Cheap for local blobs; for remote URLs it implies downloading the file, so
    * only viewers that need certainty should call it.
    */
-  async refine(opts) {
-    if (this._sniffed) return this.descriptor;
+  async refine(opts?: ReadOptions): Promise<FileTypeDescriptor> {
+    if (this.#sniffed) return this.descriptor;
     const blob = await this.toBlob(opts);
     const head = new Uint8Array(await blob.slice(0, 64).arrayBuffer());
-    this._sniffed = true;
-    this._redescribe(head);
+    this.#sniffed = true;
+    this.#redescribe(head);
     return this.descriptor;
   }
 
-  _redescribe(bytes) {
+  #redescribe(bytes?: Uint8Array): void {
     this.descriptor = describe({
       name: this.name,
       mime: this.declaredMime,
@@ -146,12 +206,12 @@ export class Source {
     });
   }
 
-  destroy() {
-    if (this._destroyed) return;
-    this._destroyed = true;
-    if (this._objectUrl) {
-      URL.revokeObjectURL(this._objectUrl);
-      this._objectUrl = '';
+  destroy(): void {
+    if (this.#destroyed) return;
+    this.#destroyed = true;
+    if (this.#objectUrl) {
+      URL.revokeObjectURL(this.#objectUrl);
+      this.#objectUrl = '';
     }
   }
 }
@@ -166,12 +226,8 @@ export class Source {
  *   - `ArrayBuffer` / TypedArray   ditto
  *   - `{ url | blob | data, name?, type?, size?, headers?, credentials? }`
  *   - `Source`                     returned untouched
- *
- * @param {any} input
- * @param {{ name?: string, type?: string, maxBytes?: number, headers?: Record<string,string>, credentials?: RequestCredentials }} [defaults]
- * @returns {Source}
  */
-export function toSource(input, defaults = {}) {
+export function toSource(input: unknown, defaults: SourceDefaults = {}): Source {
   if (input instanceof Source) return input;
 
   if (input == null || input === '') {
@@ -211,41 +267,46 @@ export function toSource(input, defaults = {}) {
 
   if (input instanceof ArrayBuffer || ArrayBuffer.isView(input)) {
     const type = defaults.type || 'application/octet-stream';
-    const blob = new Blob([input], { type });
-    return new Source({ ...common, blob, name: defaults.name || 'file', mime: type, size: blob.size });
+    const blob = new Blob([input as BlobPart], { type });
+    return new Source({
+      ...common,
+      blob,
+      name: defaults.name || 'file',
+      mime: type,
+      size: blob.size,
+    });
   }
 
   if (typeof input === 'object') {
-    const name = input.name || input.filename || defaults.name;
-    const mime = input.type || input.mime || input.contentType || defaults.type;
-    const opts = {
+    const d = input as FileDescriptor;
+    const name = d.name || d.filename || defaults.name;
+    const mime = d.type || d.mime || d.contentType || defaults.type;
+    const opts: SourceInit & SourceDefaults = {
       ...common,
-      headers: input.headers ?? common.headers,
-      credentials: input.credentials ?? common.credentials,
-      maxBytes: input.maxBytes ?? common.maxBytes,
+      headers: d.headers ?? common.headers,
+      credentials: d.credentials ?? common.credentials,
+      maxBytes: d.maxBytes ?? common.maxBytes,
       name,
       mime,
-      size: input.size,
+      size: d.size,
     };
 
-    const payload = input.blob ?? input.file ?? input.data ?? input.buffer;
+    const payload = d.blob ?? d.file ?? d.data ?? d.buffer;
     if (payload != null && typeof payload !== 'string') {
       // Re-enter so File/Blob/ArrayBuffer handling stays in one place.
       return toSource(payload, { ...opts, name, type: mime });
     }
-    const url = input.url ?? input.src ?? input.href ?? (typeof payload === 'string' ? payload : '');
+    const url = d.url ?? d.src ?? d.href ?? (typeof payload === 'string' ? payload : '');
     if (url) return new Source({ ...opts, url });
   }
 
-  throw new PreviewError(
-    'UNSUPPORTED',
-    'That input could not be read as a file.',
-    { hint: 'Pass a URL string, a File, a Blob, an ArrayBuffer, or { url, name, type }.' },
-  );
+  throw new PreviewError('UNSUPPORTED', 'That input could not be read as a file.', {
+    hint: 'Pass a URL string, a File, a Blob, an ArrayBuffer, or { url, name, type }.',
+  });
 }
 
 /** Normalise an array of inputs, keeping index order for gallery navigation. */
-export function toSources(inputs, defaults) {
+export function toSources(inputs: unknown, defaults?: SourceDefaults): Source[] {
   const list = Array.isArray(inputs) ? inputs : [inputs];
   return list.map((i) => toSource(i, defaults));
 }

@@ -1,5 +1,5 @@
 /** Inline 24×24 stroke icons. Kept as strings so they cost nothing until used. */
-const svg = (paths) =>
+const svg = (paths: string): string =>
   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg>`;
 
 export const icons = {
@@ -20,6 +20,10 @@ export const icons = {
   fullscreen: svg('<path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M3 16v3a2 2 0 0 0 2 2h3"/>'),
 };
 
-export function icon(name) {
-  return icons[name] || icons.file;
+/** Name of a bundled icon. */
+export type IconName = keyof typeof icons;
+
+/** An icon by name, falling back to the generic file glyph. */
+export function icon(name: string | undefined): string {
+  return (name && icons[name as IconName]) || icons.file;
 }

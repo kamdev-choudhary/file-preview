@@ -11,7 +11,7 @@
  */
 
 /** Broad category a viewer registers against. */
-export const Kind = /** @type {const} */ ({
+export const Kind = {
   IMAGE: "image",
   PDF: "pdf",
   AUDIO: "audio",
@@ -28,12 +28,41 @@ export const Kind = /** @type {const} */ ({
   HTML: "html",
   FONT: "font",
   UNKNOWN: "unknown",
-});
+} as const;
 
-const T = (mime, kind, lang) => ({ mime, kind, lang });
+/** The value side of {@link Kind}. */
+export type FileKind = (typeof Kind)[keyof typeof Kind];
+
+/** One extension's worth of type knowledge. */
+interface TypeInfo {
+  mime: string;
+  kind: FileKind;
+  lang?: string;
+}
+
+/** Everything detection could work out about a file. */
+export interface FileTypeDescriptor {
+  name: string;
+  ext: string;
+  mime: string;
+  kind: FileKind;
+  lang: string | undefined;
+  size: number | undefined;
+}
+
+/** What {@link sniff} can conclude from leading bytes alone. */
+export interface SniffResult {
+  mime: string;
+  kind: FileKind;
+  ext: string;
+  /** True for a ZIP container, which may really be docx/xlsx/pptx/odt/jar. */
+  zip?: boolean;
+}
+
+const T = (mime: string, kind: FileKind, lang?: string): TypeInfo => ({ mime, kind, lang });
 
 /** extension -> { mime, kind, lang? } */
-const BY_EXT = {
+const BY_EXT: Record<string, TypeInfo> = {
   // ---- images -------------------------------------------------------------
   png: T("image/png", Kind.IMAGE),
   jpg: T("image/jpeg", Kind.IMAGE),
@@ -181,17 +210,17 @@ const BY_EXT = {
 };
 
 /** Filenames with no extension that we still recognise. */
-const BY_FILENAME = {
-  dockerfile: BY_EXT.dockerfile,
+const BY_FILENAME: Record<string, TypeInfo> = {
+  dockerfile: T("text/x-dockerfile", Kind.CODE, "dockerfile"),
   makefile: T("text/x-makefile", Kind.CODE, "makefile"),
   ".gitignore": T("text/plain", Kind.CODE, "bash"),
-  ".env": BY_EXT.env,
+  ".env": T("text/plain", Kind.CODE, "bash"),
   license: T("text/plain", Kind.TEXT),
-  readme: BY_EXT.md,
+  readme: T("text/markdown", Kind.MARKDOWN, "markdown"),
 };
 
 /** MIME types that carry no information — never let these beat a real signal. */
-const GENERIC_MIME = new Set([
+const GENERIC_MIME = new Set<string>([
   "",
   "application/octet-stream",
   "binary/octet-stream",
@@ -203,8 +232,8 @@ const GENERIC_MIME = new Set([
   "application/unknown",
 ]);
 
-export function extensionOf(name = "") {
-  const clean = String(name).split(/[?#]/)[0];
+export function extensionOf(name: string = ""): string {
+  const clean = String(name).split(/[?#]/)[0] ?? "";
   const base = clean.slice(clean.lastIndexOf("/") + 1);
   const dot = base.lastIndexOf(".");
   if (dot <= 0) return "";
@@ -212,7 +241,7 @@ export function extensionOf(name = "") {
 }
 
 /** Derive a display filename from a URL, falling back to something sane. */
-export function filenameFromUrl(url, fallback = "file") {
+export function filenameFromUrl(url: string, fallback: string = "file"): string {
   try {
     const u = new URL(url, globalThis.location?.href || "http://localhost/");
     const last = decodeURIComponent(
@@ -220,38 +249,37 @@ export function filenameFromUrl(url, fallback = "file") {
     );
     return last || fallback;
   } catch {
-    const bare = String(url).split(/[?#]/)[0].split("/").filter(Boolean).pop();
+    const bare = (String(url).split(/[?#]/)[0] ?? "").split("/").filter(Boolean).pop();
     return bare ? decodeURIComponent(bare) : fallback;
   }
 }
 
 /** Pull `filename` out of a Content-Disposition header, RFC 5987 form included. */
-export function filenameFromContentDisposition(header) {
+export function filenameFromContentDisposition(header: string | null | undefined): string {
   if (!header) return "";
   const star = /filename\*\s*=\s*([^']*)'[^']*'([^;]+)/i.exec(header);
   if (star) {
     try {
-      return decodeURIComponent(star[2].trim().replace(/^"|"$/g, ""));
+      return decodeURIComponent((star[2] ?? "").trim().replace(/^"|"$/g, ""));
     } catch {
       /* fall through to the plain form */
     }
   }
   const plain = /filename\s*=\s*("([^"]*)"|[^;]+)/i.exec(header);
-  return plain ? (plain[2] ?? plain[1]).trim() : "";
+  return plain ? (plain[2] ?? plain[1] ?? "").trim() : "";
 }
 
-const ascii = (bytes, start, len) =>
+const ascii = (bytes: Uint8Array, start: number, len: number): string =>
   String.fromCharCode(...bytes.subarray(start, start + len));
 
-const startsWith = (bytes, sig, offset = 0) =>
+const startsWith = (bytes: Uint8Array, sig: number[], offset = 0): boolean =>
   sig.every((b, i) => bytes[offset + i] === b);
 
 /**
  * Identify a file from its leading bytes.
- * @param {Uint8Array} bytes  At least the first ~64 bytes.
- * @returns {{ mime: string, kind: string, ext?: string, zip?: boolean } | null}
+ * @param bytes At least the first ~64 bytes.
  */
-export function sniff(bytes) {
+export function sniff(bytes: Uint8Array | null | undefined): SniffResult | null {
   if (!bytes || bytes.length < 4) return null;
 
   if (startsWith(bytes, [0x25, 0x50, 0x44, 0x46]))
@@ -305,7 +333,7 @@ export function sniff(bytes) {
     return { mime: "audio/flac", kind: Kind.AUDIO, ext: "flac" };
   if (
     ascii(bytes, 0, 3) === "ID3" ||
-    (bytes[0] === 0xff && (bytes[1] & 0xe0) === 0xe0)
+    (bytes[0] === 0xff && ((bytes[1] ?? 0) & 0xe0) === 0xe0)
   )
     return { mime: "audio/mpeg", kind: Kind.AUDIO, ext: "mp3" };
   if (startsWith(bytes, [0x1a, 0x45, 0xdf, 0xa3]))
@@ -351,12 +379,12 @@ export function sniff(bytes) {
 }
 
 /** True if the buffer looks like decodable UTF-8 text rather than binary. */
-export function looksLikeText(bytes, sampleSize = 4096) {
+export function looksLikeText(bytes: Uint8Array | null | undefined, sampleSize = 4096): boolean {
   if (!bytes?.length) return false;
   const n = Math.min(bytes.length, sampleSize);
   let suspicious = 0;
   for (let i = 0; i < n; i++) {
-    const b = bytes[i];
+    const b = bytes[i] ?? 0;
     if (b === 0) return false; // a NUL byte means binary
     // Control characters other than tab/LF/CR/FF/ESC
     if (b < 0x09 || (b > 0x0d && b < 0x20 && b !== 0x1b)) suspicious++;
@@ -364,27 +392,26 @@ export function looksLikeText(bytes, sampleSize = 4096) {
   return suspicious / n < 0.05;
 }
 
-/**
- * Merge every available signal into one descriptor.
- *
- * @param {{ name?: string, mime?: string, bytes?: Uint8Array, size?: number }} input
- * @returns {{ name: string, ext: string, mime: string, kind: string, lang?: string, size?: number }}
- */
-export function describe({ name = "", mime = "", bytes, size } = {}) {
+export interface DescribeInput {
+  name?: string;
+  mime?: string;
+  bytes?: Uint8Array | undefined;
+  size?: number | undefined;
+}
+
+/** Merge every available signal into one descriptor. */
+export function describe({ name = "", mime = "", bytes, size }: DescribeInput = {}): FileTypeDescriptor {
   const ext = extensionOf(name);
   const base = name.slice(name.lastIndexOf("/") + 1).toLowerCase();
 
-  const fromExt = BY_EXT[ext] || BY_FILENAME[base] || null;
-  const declared = GENERIC_MIME.has(
-    String(mime).split(";")[0].trim().toLowerCase(),
-  )
-    ? null
-    : String(mime).split(";")[0].trim().toLowerCase();
+  const fromExt = BY_EXT[ext] ?? BY_FILENAME[base] ?? null;
+  const bareMime = (String(mime).split(";")[0] ?? "").trim().toLowerCase();
+  const declared = GENERIC_MIME.has(bareMime) ? null : bareMime;
   const sniffed = bytes ? sniff(bytes) : null;
 
-  let kind = fromExt?.kind ?? Kind.UNKNOWN;
-  let resolvedMime = fromExt?.mime ?? declared ?? "application/octet-stream";
-  let lang = fromExt?.lang;
+  let kind: FileKind = fromExt?.kind ?? Kind.UNKNOWN;
+  let resolvedMime: string = fromExt?.mime ?? declared ?? "application/octet-stream";
+  let lang: string | undefined = fromExt?.lang;
 
   if (sniffed && !sniffed.zip) {
     // Bytes beat the extension: a ".txt" that is really a PDF renders as a PDF.
@@ -429,11 +456,8 @@ export function describe({ name = "", mime = "", bytes, size } = {}) {
 }
 
 /** Coarse kind implied by a MIME type alone, or null if it says nothing useful. */
-export function kindFromMime(mime) {
-  const m = String(mime || "")
-    .split(";")[0]
-    .trim()
-    .toLowerCase();
+export function kindFromMime(mime: string | null | undefined): FileKind | null {
+  const m = (String(mime || "").split(";")[0] ?? "").trim().toLowerCase();
   if (!m || GENERIC_MIME.has(m)) return null;
   if (m.startsWith("image/")) return Kind.IMAGE;
   if (m.startsWith("audio/")) return Kind.AUDIO;
@@ -456,14 +480,18 @@ export function kindFromMime(mime) {
  * when the bytes are already local (free), or when the server's Content-Type
  * disagrees with the extension about what this file even is.
  */
-export function shouldPreSniff(source) {
+export function shouldPreSniff(source: {
+  blob: Blob | null;
+  declaredMime: string;
+  kind: FileKind;
+}): boolean {
   if (source.blob) return true;
   const declared = kindFromMime(source.declaredMime);
   return Boolean(declared && declared !== source.kind);
 }
 
 /** Human-readable byte count. */
-export function formatBytes(n) {
+export function formatBytes(n: number | null | undefined): string {
   if (n == null || !Number.isFinite(n)) return "";
   if (n < 1000) return `${n} B`;
   const units = ["KB", "MB", "GB", "TB"];

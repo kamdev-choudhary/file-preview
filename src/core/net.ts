@@ -1,25 +1,31 @@
 import { PreviewError, toPreviewError } from './errors.js';
 import { filenameFromContentDisposition } from './mime.js';
 
+export interface FetchBlobOptions {
+  signal?: AbortSignal | undefined;
+  headers?: Record<string, string> | undefined;
+  credentials?: RequestCredentials | undefined;
+  maxBytes?: number | undefined;
+  onProgress?: ((loaded: number, total: number | null) => void) | undefined;
+}
+
+export interface FetchBlobResult {
+  blob: Blob;
+  /** The server's Content-Type, verbatim and possibly useless. */
+  mime: string;
+  /** Filename from Content-Disposition, or '' when the server sent none. */
+  filename: string;
+}
+
 /**
  * Fetch a URL into a Blob, streaming so we can report progress and abort
  * mid-flight. Falls back to a plain `.blob()` when the body is not a readable
  * stream (older Safari, some polyfills).
- *
- * @param {string} url
- * @param {{
- *   signal?: AbortSignal,
- *   headers?: Record<string,string>,
- *   credentials?: RequestCredentials,
- *   maxBytes?: number,
- *   onProgress?: (loaded: number, total: number | null) => void,
- * }} [opts]
- * @returns {Promise<{ blob: Blob, mime: string, filename: string }>}
  */
-export async function fetchBlob(url, opts = {}) {
+export async function fetchBlob(url: string, opts: FetchBlobOptions = {}): Promise<FetchBlobResult> {
   const { signal, headers, credentials, maxBytes, onProgress } = opts;
 
-  let res;
+  let res: Response;
   try {
     res = await fetch(url, {
       signal,
@@ -33,15 +39,19 @@ export async function fetchBlob(url, opts = {}) {
   }
 
   if (!res.ok) {
-    throw new PreviewError('HTTP', `The server returned ${res.status} ${res.statusText || ''}`.trim() + '.', {
-      status: res.status,
-      hint:
-        res.status === 404
-          ? 'The file may have been moved or deleted.'
-          : res.status === 401 || res.status === 403
-            ? 'You may not have permission to read this file, or a signed URL may have expired.'
-            : 'Try again in a moment.',
-    });
+    throw new PreviewError(
+      'HTTP',
+      `${`The server returned ${res.status} ${res.statusText || ''}`.trim()}.`,
+      {
+        status: res.status,
+        hint:
+          res.status === 404
+            ? 'The file may have been moved or deleted.'
+            : res.status === 401 || res.status === 403
+              ? 'You may not have permission to read this file, or a signed URL may have expired.'
+              : 'Try again in a moment.',
+      },
+    );
   }
 
   const mime = res.headers.get('content-type') || '';
@@ -63,7 +73,7 @@ export async function fetchBlob(url, opts = {}) {
   }
 
   const reader = res.body.getReader();
-  const chunks = [];
+  const chunks: Uint8Array[] = [];
   let loaded = 0;
 
   try {
@@ -85,11 +95,15 @@ export async function fetchBlob(url, opts = {}) {
     throw toPreviewError(err);
   }
 
-  return { blob: new Blob(chunks, mime ? { type: mime } : undefined), mime, filename };
+  return {
+    blob: new Blob(chunks as BlobPart[], mime ? { type: mime } : undefined),
+    mime,
+    filename,
+  };
 }
 
 /** True for URLs a browser can load without any CORS involvement at all. */
-export function isSameOriginOrData(url) {
+export function isSameOriginOrData(url: string): boolean {
   if (/^(data|blob):/i.test(url)) return true;
   try {
     return new URL(url, location.href).origin === location.origin;
@@ -99,7 +113,7 @@ export function isSameOriginOrData(url) {
 }
 
 /** Absolute http(s) URL — the only kind the Office Online viewer can accept. */
-export function isPublicHttpUrl(url) {
+export function isPublicHttpUrl(url: string): boolean {
   try {
     const u = new URL(url, globalThis.location?.href);
     if (u.protocol !== 'http:' && u.protocol !== 'https:') return false;

@@ -9,8 +9,22 @@
  * doubled quotes, and CRLF or LF line endings.
  */
 
+export interface ParseCsvOptions {
+  /** Force a delimiter instead of detecting one. */
+  delimiter?: string | undefined;
+  /** Stop after this many rows. */
+  maxRows?: number | undefined;
+}
+
+export interface ParseCsvResult {
+  rows: string[][];
+  /** True when `maxRows` cut the input short. */
+  truncated: boolean;
+  delimiter: string;
+}
+
 /** Guess the delimiter by counting candidates outside quoted regions. */
-export function detectDelimiter(sample) {
+export function detectDelimiter(sample: string): string {
   const candidates = [',', '\t', ';', '|'];
   let best = ',';
   let bestCount = 0;
@@ -31,20 +45,15 @@ export function detectDelimiter(sample) {
   return best;
 }
 
-/**
- * @param {string} text
- * @param {{ delimiter?: string, maxRows?: number }} [opts]
- * @returns {{ rows: string[][], truncated: boolean, delimiter: string }}
- */
-export function parseCsv(text, opts = {}) {
+export function parseCsv(text: string, opts: ParseCsvOptions = {}): ParseCsvResult {
   // A BOM would otherwise show up inside the first cell.
   if (text.charCodeAt(0) === 0xfeff) text = text.slice(1);
 
   const delimiter = opts.delimiter || detectDelimiter(text.slice(0, 8192));
   const maxRows = opts.maxRows ?? Infinity;
 
-  const rows = [];
-  let row = [];
+  const rows: string[][] = [];
+  let row: string[] = [];
   let field = '';
   let inQuotes = false;
   let truncated = false;
@@ -93,15 +102,14 @@ export function parseCsv(text, opts = {}) {
   }
 
   // A trailing newline produces one empty row; drop it.
-  if (rows.length && rows[rows.length - 1].length === 1 && rows[rows.length - 1][0] === '') {
-    rows.pop();
-  }
+  const last = rows[rows.length - 1];
+  if (last && last.length === 1 && last[0] === '') rows.pop();
 
   return { rows, truncated, delimiter };
 }
 
 /** Serialise back to CSV, quoting only where required. */
-export function toCsv(rows, delimiter = ',') {
+export function toCsv(rows: ReadonlyArray<ReadonlyArray<unknown>>, delimiter = ','): string {
   const needsQuote = new RegExp(`["\\n\\r${delimiter.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}]`);
   return rows
     .map((r) =>

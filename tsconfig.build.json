@@ -1,0 +1,16 @@
+{
+  // Declaration-only pass. Vite/rolldown emits the JavaScript; tsc emits the
+  // .d.ts tree beside it so the published types are generated from the source
+  // of truth instead of hand-maintained (which is how they drifted before).
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "emitDeclarationOnly": true,
+    "declaration": true,
+    "declarationMap": false,
+    "sourceMap": false,
+    "outDir": "dist",
+    "rootDir": "src"
+  },
+  "include": ["src"]
+}

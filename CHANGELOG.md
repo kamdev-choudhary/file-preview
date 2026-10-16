@@ -35,9 +35,12 @@ runtime API is unchanged apart from the import specifier.
   `ViewerDefinition`, `ToolbarAction`, `FileKind`, `FileTypeDescriptor`,
   `SniffResult`, `PreviewErrorCode`, `FileDescriptor`, `SourceDefaults`,
   `ReadOptions`, `ShowOptions`, `XlsxLoader` and more.
-- **A test suite** — 163 unit tests covering detection, the CSV parser, the
-  `Source` abstraction, the viewer registry, the error taxonomy, config merging
-  and syntax highlighting. There were none before.
+- **A test suite** — 297 unit tests covering detection, the CSV parser, the
+  `Source` abstraction, the viewer registry, networking and size limits, the
+  error taxonomy, config merging, the DOM helpers, the error/loading panels and
+  syntax highlighting. There were none before. Every syntax grammar and every
+  built-in viewer module is load-tested, so a broken lazy import fails in CI
+  rather than in a user's browser.
 - **CI** on every push and PR: lint, format check, typecheck, tests with
   coverage thresholds, build, an entry-chunk size budget, `publint` and
   `@arethetypeswrong/cli`, across Node 20.19 / 22 / 24.

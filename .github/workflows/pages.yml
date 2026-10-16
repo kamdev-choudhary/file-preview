@@ -20,6 +20,9 @@ jobs:
       contents: read
       pages: write
       id-token: write
+    # `github-pages` is a GitHub-managed environment. It does not exist until
+    # Pages is enabled, which is what `enablement: true` below takes care of —
+    # editors may flag the name as unknown until that first successful run.
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
@@ -38,7 +41,13 @@ jobs:
       - name: Build demo
         run: pnpm run build:demo
 
+      # `enablement: true` turns Pages on via the API if it is not already
+      # configured. Without it, the very first run fails with "Get Pages site
+      # failed" because the site does not exist yet.
       - uses: actions/configure-pages@v6
+        with:
+          enablement: true
+
       - uses: actions/upload-pages-artifact@v5
         with:
           path: dist-demo

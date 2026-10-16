@@ -7,10 +7,34 @@ group('canHighlight', () => {
     // language the detector emits but the loader lacks would silently render
     // unhighlighted.
     const fromMime = [
-      'bash', 'c', 'cpp', 'csharp', 'css', 'diff', 'dockerfile', 'go', 'graphql',
-      'ini', 'java', 'javascript', 'json', 'kotlin', 'less', 'makefile', 'markdown',
-      'php', 'powershell', 'python', 'ruby', 'rust', 'scss', 'sql', 'swift',
-      'typescript', 'xml', 'yaml',
+      'bash',
+      'c',
+      'cpp',
+      'csharp',
+      'css',
+      'diff',
+      'dockerfile',
+      'go',
+      'graphql',
+      'ini',
+      'java',
+      'javascript',
+      'json',
+      'kotlin',
+      'less',
+      'makefile',
+      'markdown',
+      'php',
+      'powershell',
+      'python',
+      'ruby',
+      'rust',
+      'scss',
+      'sql',
+      'swift',
+      'typescript',
+      'xml',
+      'yaml',
     ];
     for (const lang of fromMime) {
       expect(canHighlight(lang), `missing grammar: ${lang}`).toBe(true);
@@ -55,5 +79,46 @@ group('highlight', () => {
 
   it('handles empty input', async () => {
     await expect(highlight('', 'javascript')).resolves.toBe('');
+  });
+});
+
+group('grammar loading', () => {
+  // Every grammar is reached through its own dynamic import. A typo in any one
+  // path would only surface when a user previewed that language, so load them
+  // all here and let the test suite find it instead.
+  const LANGS = [
+    'bash',
+    'c',
+    'cpp',
+    'csharp',
+    'css',
+    'diff',
+    'dockerfile',
+    'go',
+    'graphql',
+    'ini',
+    'java',
+    'javascript',
+    'json',
+    'kotlin',
+    'less',
+    'makefile',
+    'markdown',
+    'php',
+    'powershell',
+    'python',
+    'ruby',
+    'rust',
+    'scss',
+    'sql',
+    'swift',
+    'typescript',
+    'xml',
+    'yaml',
+  ];
+
+  it.each(LANGS)('loads and applies the %s grammar', async (lang) => {
+    const html = await highlight('test', lang);
+    expect(html, `${lang} failed to load`).toBeTypeOf('string');
   });
 });

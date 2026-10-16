@@ -3,17 +3,17 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>file-preview — universal file preview component</title>
+    <title>previewkit — universal file preview web component</title>
     <link
       rel="icon"
       href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='13' font-size='14'>📄</text></svg>"
     />
-    <link rel="stylesheet" href="/demo/demo.css" />
+    <link rel="stylesheet" href="./demo/demo.css" />
   </head>
   <body>
     <header class="hero">
       <div class="wrap">
-        <h1>file&#8209;preview</h1>
+        <h1>previewkit</h1>
         <p class="tagline">
           One framework-free web component that previews images, PDFs, Office documents, media,
           code, archives and fonts — from URLs, <code>File</code>s, Blobs or buffers.
@@ -89,6 +89,6 @@
     <!-- Visually hidden rather than `hidden`: some browsers refuse to open the
          file dialog for a programmatic .click() on a display:none input. -->
     <input type="file" id="file-input" multiple class="visually-hidden" />
-    <script type="module" src="/demo/demo.ts"></script>
+    <script type="module" src="./demo/demo.ts"></script>
   </body>
 </html>

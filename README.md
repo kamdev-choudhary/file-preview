@@ -263,10 +263,10 @@ configure({
 });
 ```
 
-Or install it yourself and accept the npm version:
+Or install it yourself and accept the npm version, advisories included:
 
 ```bash
-npm install xlsx
+pnpm add xlsx          # or: npm install xlsx
 ```
 
 ```js

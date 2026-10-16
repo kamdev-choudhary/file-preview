@@ -96,8 +96,11 @@ const SAMPLES = [
   { file: 'sample.zip', label: 'ZIP archive', note: 'Browsable file listing' },
 ];
 
-// Vite serves `public/` from the site root, so these are absolute paths.
-const sampleUrl = (f: string): string => new URL(`/samples/${f}`, location.href).href;
+// Vite serves `public/` from the configured base, which is "./" here so the
+// demo also works from a project subpath on GitHub Pages. Resolving against
+// BASE_URL rather than the server root is what makes that hold.
+const sampleUrl = (f: string): string =>
+  new URL(`samples/${f}`, new URL(import.meta.env.BASE_URL, location.href)).href;
 const allSampleUrls = () => SAMPLES.map((s) => sampleUrl(s.file));
 
 function extBadge(file: string): string {

@@ -56,7 +56,7 @@
     "format:check": "prettier --check \"**/*.{js,mjs,ts,json,md,html,css}\"",
     "typecheck": "tsc --noEmit",
     "size": "node scripts/check-size.mjs",
-    "verify": "pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run build && pnpm run size && publint",
+    "verify": "pnpm run lint && pnpm run format:check && pnpm run typecheck && pnpm run test:coverage && pnpm run build && pnpm run size && publint",
     "prepublishOnly": "pnpm run build",
     "build:types": "tsc -p tsconfig.build.json"
   },

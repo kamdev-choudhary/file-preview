@@ -54,9 +54,7 @@ group('el', () => {
 
 group('escapeHtml', () => {
   it('escapes every character that could break out of markup', () => {
-    expect(escapeHtml(`<script>alert("x")&'`)).toBe(
-      '&lt;script&gt;alert(&quot;x&quot;)&amp;&#39;',
-    );
+    expect(escapeHtml(`<script>alert("x")&'`)).toBe('&lt;script&gt;alert(&quot;x&quot;)&amp;&#39;');
   });
 
   it('leaves safe text untouched', () => {

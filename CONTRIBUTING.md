@@ -17,17 +17,17 @@ pnpm dev                 # demo at localhost:5173
 
 ## The commands that matter
 
-| Command | What it does |
-| --- | --- |
-| `pnpm dev` | Demo site with HMR |
-| `pnpm test` | Unit tests (vitest) |
-| `pnpm test:watch` | Same, in watch mode |
-| `pnpm typecheck` | `tsc --noEmit` over src, test and demo |
-| `pnpm lint` | oxlint |
-| `pnpm format` | Prettier, writing in place |
-| `pnpm build` | Library build + generated `.d.ts` |
-| `pnpm size` | Fails if the entry chunk busts its gzip budget |
-| `pnpm verify` | Everything CI runs, in one go |
+| Command           | What it does                                   |
+| ----------------- | ---------------------------------------------- |
+| `pnpm dev`        | Demo site with HMR                             |
+| `pnpm test`       | Unit tests (vitest)                            |
+| `pnpm test:watch` | Same, in watch mode                            |
+| `pnpm typecheck`  | `tsc --noEmit` over src, test and demo         |
+| `pnpm lint`       | oxlint                                         |
+| `pnpm format`     | Prettier, writing in place                     |
+| `pnpm build`      | Library build + generated `.d.ts`              |
+| `pnpm size`       | Fails if the entry chunk busts its gzip budget |
+| `pnpm verify`     | Everything CI runs, in one go                  |
 
 Run `pnpm verify` before opening a PR. CI runs the same thing plus a Node
 version matrix.
@@ -90,7 +90,7 @@ If you fix a bug in `core/`, add the case that was broken.
 ## Commits and PRs
 
 - One logical change per PR, with a description of what breaks if it is wrong.
-- Keep comments about *why*, not *what*. The existing code is a good guide.
+- Keep comments about _why_, not _what_. The existing code is a good guide.
 - No new runtime dependency without a note in the PR explaining why the
   alternative — writing the 60 lines — is worse.
 

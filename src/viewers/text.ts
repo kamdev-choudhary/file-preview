@@ -1,13 +1,15 @@
 import { el, disposer, escapeHtml } from '../ui/dom.js';
 import { PreviewError } from '../core/errors.js';
 import { Kind, formatBytes } from '../core/mime.js';
+import { highlight } from './highlight.js';
 import type { ToolbarAction, ViewerContext, ViewerInstance } from '../core/registry.js';
 
 /**
  * Plain text, source code, JSON and raw HTML.
  *
- * Highlighting is optional: highlight.js is imported lazily and only when the
- * file actually has a known language, so a 10 MB log file never pays for it.
+ * Highlighting is optional: the engine and a single grammar are imported lazily
+ * and only when the file actually has a known language, so a 10 MB log file
+ * never pays for it.
  * Very large files are truncated with an explicit notice rather than locking
  * the main thread trying to lay out a million DOM nodes.
  */
@@ -60,19 +62,11 @@ export default async function textViewer(ctx: ViewerContext): Promise<ViewerInst
   const wrap = el('div', { class: 'fp-text' }, [gutter, pre]);
   const viewport = el('div', { class: 'fp-viewport fp-viewport--text' }, [wrap]);
 
-  let highlighted = false;
-  if (lang) {
-    try {
-      const { default: hljs } = await import('highlight.js/lib/common');
-      if (hljs.getLanguage(lang)) {
-        code.innerHTML = hljs.highlight(body, { language: lang, ignoreIllegals: true }).value;
-        highlighted = true;
-      }
-    } catch {
-      // Highlighting is a nicety; plain text is a perfectly good fallback.
-    }
-  }
-  if (!highlighted) code.textContent = body;
+  // `highlight()` returns null rather than throwing when the grammar is
+  // unavailable, so plain text is always a valid outcome here.
+  const html = await highlight(body, lang);
+  if (html === null) code.textContent = body;
+  else code.innerHTML = html;
 
   // Line numbers as a parallel column, so selecting the code never copies them.
   const lineCount = body.split('\n').length;

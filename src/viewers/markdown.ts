@@ -36,13 +36,13 @@ export default async function markdownViewer(ctx: ViewerContext): Promise<Viewer
   const article = el('article', { class: 'fp-markdown', html });
 
   // Links inside a preview should never navigate the host page away.
-  for (const a of article.querySelectorAll('a[href]')) {
+  for (const a of article.querySelectorAll<HTMLAnchorElement>('a[href]')) {
     a.target = '_blank';
     a.rel = 'noopener noreferrer nofollow';
   }
   // Relative image paths cannot resolve for an uploaded file; flag them rather
   // than leaving a silent broken-image icon.
-  for (const img of article.querySelectorAll('img')) {
+  for (const img of article.querySelectorAll<HTMLImageElement>('img')) {
     img.loading = 'lazy';
     img.addEventListener('error', () => img.replaceWith(
       el('span', { class: 'fp-inline-missing', text: `[missing image: ${img.getAttribute('src') || ''}]` }),

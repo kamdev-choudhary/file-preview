@@ -96,10 +96,13 @@ export default async function mediaViewer(ctx: ViewerContext): Promise<ViewerIns
   container.append(viewport);
 
   const secs = media.duration;
+  // `media` is typed as the union of both elements; only the video branch has
+  // intrinsic dimensions, and `isVideo` is what decided which tag was created.
+  const video = isVideo ? (media as HTMLVideoElement) : null;
   ctx.setStatus(
     Number.isFinite(secs) && secs > 0
       ? `${Math.floor(secs / 60)}:${String(Math.floor(secs % 60)).padStart(2, '0')}` +
-          (isVideo && media.videoWidth ? ` · ${media.videoWidth} × ${media.videoHeight}` : '')
+          (video?.videoWidth ? ` · ${video.videoWidth} × ${video.videoHeight}` : '')
       : '',
   );
 

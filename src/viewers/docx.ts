@@ -17,7 +17,7 @@ export default async function docxViewer(ctx: ViewerContext): Promise<ViewerInst
   const d = disposer();
 
   ctx.setStatus('Loading document engine…');
-  let mammoth: typeof import('mammoth');
+  let mammoth: typeof import('mammoth/mammoth.browser.js').default;
   let DOMPurify: typeof import('dompurify').default;
   try {
     [{ default: mammoth }, { default: DOMPurify }] = await Promise.all([
@@ -33,7 +33,7 @@ export default async function docxViewer(ctx: ViewerContext): Promise<ViewerInst
   if (signal.aborted) throw new DOMException('aborted', 'AbortError');
 
   ctx.setStatus('Converting…');
-  let result: { value: string; messages: Array<{ type: string; message: string }> };
+  let result: import('mammoth/mammoth.browser.js').MammothResult;
   try {
     result = await mammoth.convertToHtml(
       { arrayBuffer },
@@ -76,7 +76,7 @@ export default async function docxViewer(ctx: ViewerContext): Promise<ViewerInst
   }
 
   const article = el('article', { class: 'fp-doc', html: clean });
-  for (const a of article.querySelectorAll('a[href]')) {
+  for (const a of article.querySelectorAll<HTMLAnchorElement>('a[href]')) {
     a.target = '_blank';
     a.rel = 'noopener noreferrer nofollow';
   }

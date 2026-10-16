@@ -85,9 +85,11 @@ export default async function pdfViewer(ctx: ViewerContext): Promise<ViewerInsta
     standardFontDataUrl:
       config.pdfStandardFontDataUrl ??
       `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/standard_fonts/`,
-    isEvalSupported: false,
   });
-  d.add(() => task.destroy?.());
+  // Tearing down the loading task also tears down the document and its worker
+  // transport. `PDFDocumentProxy` itself exposes no destroy() — the previous
+  // `doc.destroy?.()` call was silently a no-op.
+  d.add(() => void task.destroy());
 
   try {
     doc = await task.promise;
@@ -106,8 +108,6 @@ export default async function pdfViewer(ctx: ViewerContext): Promise<ViewerInsta
     }
     throw new PreviewError('DECODE', 'This PDF could not be opened.', { cause: err });
   }
-
-  d.add(() => doc.destroy?.());
 
   const total = doc.numPages;
   const scroller = el('div', { class: 'fp-viewport fp-pdf' });
@@ -157,9 +157,9 @@ export default async function pdfViewer(ctx: ViewerContext): Promise<ViewerInsta
       canvas.style.width = `${Math.floor(viewport.width / (globalThis.devicePixelRatio || 1))}px`;
       canvas.style.height = `${Math.floor(viewport.height / (globalThis.devicePixelRatio || 1))}px`;
 
-      const context = canvas.getContext('2d');
-      if (!context) throw new Error('could not get a 2d canvas context');
-      p.task = page.render({ canvasContext: context, viewport });
+      // pdf.js v6 prefers the canvas itself over a 2D context; passing the
+      // context is the deprecated path.
+      p.task = page.render({ canvas, viewport });
       await p.task.promise;
       if (signal.aborted) return;
       p.canvas?.remove();

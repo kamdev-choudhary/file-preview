@@ -9,10 +9,25 @@ import {
   canUseOfficeViewer,
 } from '../ui/panels.js';
 import { toSource, Source } from '../core/source.js';
+import type { PreviewInput } from '../core/source.js';
 import { resolveViewer } from '../core/registry.js';
+import type { ViewerContext, ViewerInstance } from '../core/registry.js';
 import { getConfig } from '../core/config.js';
 import { toPreviewError, PreviewError } from '../core/errors.js';
 import { formatBytes, shouldPreSniff } from '../core/mime.js';
+
+/** `fp-load` detail. */
+export interface LoadDetail {
+  source: Source;
+  /** Id of the viewer that rendered it. */
+  viewer: string;
+}
+
+/** `fp-error` detail. */
+export interface ErrorDetail {
+  source: Source | null;
+  error: PreviewError;
+}
 
 const sheet = makeStyles(css);
 
@@ -24,28 +39,26 @@ const sheet = makeStyles(css);
  * Events:     fp-load, fp-error, fp-close
  */
 export class FilePreviewElement extends HTMLElement {
-  static observedAttributes = ['src', 'name', 'type', 'theme', 'toolbar', 'download'];
+  static readonly observedAttributes = ['src', 'name', 'type', 'theme', 'toolbar', 'download'];
 
-  #root;
-  #stageHost;
-  #stage;
-  #controls;
-  #toolbar;
-  #leadSlot;
-  #titleEl;
-  #subtitleEl;
-  #statusEl;
-  #actionsHost;
-  #zoomGroup;
-  #pageGroup;
-  #zoomLabel;
-  #pageInput;
-  #pageTotal;
-  /** @type {Source|null} */
-  #source = null;
-  /** @type {import('../core/registry.js').ViewerInstance|null} */
-  #instance = null;
-  #abort = null;
+  readonly #root: HTMLElement;
+  readonly #stageHost: HTMLElement;
+  readonly #stage: HTMLElement;
+  readonly #controls: HTMLElement;
+  readonly #toolbar: HTMLElement;
+  readonly #leadSlot: HTMLElement;
+  readonly #titleEl: HTMLElement;
+  readonly #subtitleEl: HTMLElement;
+  readonly #statusEl: HTMLElement;
+  readonly #actionsHost: HTMLElement;
+  readonly #zoomGroup: HTMLElement;
+  readonly #pageGroup: HTMLElement;
+  readonly #zoomLabel: HTMLElement;
+  readonly #pageInput: HTMLInputElement;
+  readonly #pageTotal: HTMLElement;
+  #source: Source | null = null;
+  #instance: ViewerInstance | null = null;
+  #abort: AbortController | null = null;
   #loadToken = 0;
   /**
    * Viewers that already failed on the *current* file, so the retry path can
@@ -53,11 +66,11 @@ export class FilePreviewElement extends HTMLElement {
    * one bad file would permanently blacklist a viewer for every later file
    * loaded into the same element — and the modal reuses a single element.
    */
-  #failedViewers = new Set();
-  #failedFor = null;
-  #d = disposer();
+  readonly #failedViewers = new Set<string>();
+  #failedFor: Source | null = null;
+  readonly #d = disposer();
   #connected = false;
-  #pendingInput = undefined;
+  #pendingInput: PreviewInput | null | undefined = undefined;
   #usingOfficeFrame = false;
 
   constructor() {
@@ -117,11 +130,12 @@ export class FilePreviewElement extends HTMLElement {
 
   // -------------------------------------------------------------- lifecycle
 
-  connectedCallback() {
+  connectedCallback(): void {
     this.#connected = true;
     // `closest()` stops at the shadow boundary, so it can never see the modal
     // that hosts us. Check the shadow root's host as well.
-    const shadowHost = this.getRootNode()?.host;
+    const root = this.getRootNode();
+    const shadowHost = root instanceof ShadowRoot ? root.host : null;
     const insideModal =
       Boolean(this.closest('file-preview-modal')) ||
       shadowHost?.tagName === 'FILE-PREVIEW-MODAL';
@@ -137,12 +151,12 @@ export class FilePreviewElement extends HTMLElement {
     }
   }
 
-  disconnectedCallback() {
+  disconnectedCallback(): void {
     this.#connected = false;
     this.#teardown();
   }
 
-  attributeChangedCallback(name, prev, next) {
+  attributeChangedCallback(name: string, prev: string | null, next: string | null): void {
     if (prev === next) return;
     if (!this.#connected) return;
     if (name === 'src' || name === 'name' || name === 'type') this.#loadFromAttributes();
@@ -153,7 +167,7 @@ export class FilePreviewElement extends HTMLElement {
   // ------------------------------------------------------------- public API
 
   /** Any accepted input: URL string, File, Blob, ArrayBuffer, or descriptor. */
-  set file(input) {
+  set file(input: PreviewInput | null | undefined) {
     if (!this.#connected) {
       // Setting a property before the element is upgraded/attached is normal;
       // hold it and load on connect rather than dropping it.
@@ -167,32 +181,32 @@ export class FilePreviewElement extends HTMLElement {
     this.#load(input);
   }
 
-  get file() {
+  get file(): Source | null {
     return this.#source;
   }
 
   /** The resolved Source, once loading has started. */
-  get source() {
+  get source(): Source | null {
     return this.#source;
   }
 
-  get src() {
+  get src(): string {
     return this.getAttribute('src') || '';
   }
-  set src(v) {
+  set src(v: string | null) {
     if (v == null) this.removeAttribute('src');
     else this.setAttribute('src', v);
   }
 
   /** Re-run the current load from scratch. */
-  reload() {
+  reload(): void {
     if (!this.#source) return;
     this.#failedViewers.clear();
     this.#load(this.#source);
   }
 
   /** Tear down the current preview and show nothing. */
-  clear() {
+  clear(): void {
     this.#teardown();
     this.#stage.replaceChildren();
     this.#source = null;
@@ -203,7 +217,7 @@ export class FilePreviewElement extends HTMLElement {
   }
 
   /** Trigger a browser download of the current file. */
-  async download() {
+  async download(): Promise<void> {
     const source = this.#source;
     if (!source) return;
     try {
@@ -223,8 +237,8 @@ export class FilePreviewElement extends HTMLElement {
 
   // ---------------------------------------------------------------- toolbar
 
-  #buildToolbarGroups() {
-    const tool = (name, label, onClick) =>
+  #buildToolbarGroups(): void {
+    const tool = (name: string, label: string, onClick: () => void): HTMLElement =>
       el('button', {
         class: 'fp-tool',
         type: 'button',
@@ -256,13 +270,13 @@ export class FilePreviewElement extends HTMLElement {
     Object.assign(this.#pageGroup.style, { display: 'none', alignItems: 'center', gap: '2px' });
   }
 
-  #stepPage(delta) {
+  #stepPage(delta: number): void {
     const n = Number(this.#pageInput.value) + delta;
     this.#instance?.goToPage?.(n);
   }
 
   /** Rebuild the toolbar for the currently mounted viewer. */
-  #syncToolbar() {
+  #syncToolbar(): void {
     this.#actionsHost.replaceChildren();
     this.#leadSlot.replaceChildren();
 
@@ -288,7 +302,12 @@ export class FilePreviewElement extends HTMLElement {
       return;
     }
 
-    const tool = (name, label, onClick, extra = {}) =>
+    const tool = (
+      name: string,
+      label: string,
+      onClick: () => void,
+      extra: Record<string, unknown> = {},
+    ): HTMLElement =>
       el('button', {
         class: 'fp-tool',
         type: 'button',
@@ -299,7 +318,7 @@ export class FilePreviewElement extends HTMLElement {
         ...extra,
       });
 
-    const frag = [];
+    const frag: HTMLElement[] = [];
 
     // Viewer-contributed actions (copy, wrap, view source, …)
     for (const action of this.#instance?.actions || []) {
@@ -332,7 +351,7 @@ export class FilePreviewElement extends HTMLElement {
   }
 
   /** Hide the floating pill entirely when neither group has anything to show. */
-  #syncControlsVisibility() {
+  #syncControlsVisibility(): void {
     const pages = this.#pageGroup.style.display !== 'none';
     const zoom = this.#zoomGroup.style.display !== 'none';
     this.#controls.classList.toggle('is-hidden', !pages && !zoom);
@@ -341,7 +360,7 @@ export class FilePreviewElement extends HTMLElement {
 
   // ------------------------------------------------------------------ load
 
-  #updateSubtitle(source) {
+  #updateSubtitle(source: Source): void {
     this.#subtitleEl.textContent = [
       source.ext ? source.ext.toUpperCase() : source.mime,
       formatBytes(source.size),
@@ -350,7 +369,7 @@ export class FilePreviewElement extends HTMLElement {
       .join(' · ');
   }
 
-  #loadFromAttributes() {
+  #loadFromAttributes(): void {
     const src = this.getAttribute('src');
     if (!src) return;
     this.#load({
@@ -360,7 +379,7 @@ export class FilePreviewElement extends HTMLElement {
     });
   }
 
-  #teardown() {
+  #teardown(): void {
     this.#abort?.abort();
     this.#abort = null;
     try {
@@ -373,13 +392,13 @@ export class FilePreviewElement extends HTMLElement {
     this.#usingOfficeFrame = false;
   }
 
-  async #load(input) {
+  async #load(input: PreviewInput): Promise<void> {
     const token = ++this.#loadToken;
     this.#teardown();
     this.#stage.replaceChildren();
 
     const config = getConfig();
-    let source;
+    let source: Source;
     try {
       source =
         input instanceof Source
@@ -416,17 +435,17 @@ export class FilePreviewElement extends HTMLElement {
     const loader = loadingPanel();
     this.#stage.append(loader.node);
 
-    const ctx = {
+    const ctx: ViewerContext = {
       source,
       container: this.#stage,
       signal: abort.signal,
       config,
-      setStatus: (t) => {
+      setStatus: (t: string) => {
         if (token !== this.#loadToken) return;
         loader.setStatus(t);
         this.#statusEl.textContent = t || '';
       },
-      setProgress: (l, t) => {
+      setProgress: (l: number, t: number | null) => {
         if (token === this.#loadToken) loader.setProgress(l, t);
       },
       requestFallback: () => this.#showUnsupported(),
@@ -483,7 +502,7 @@ export class FilePreviewElement extends HTMLElement {
         return;
       }
 
-      this.#instance = instance || {};
+      this.#instance = instance ?? {};
       loader.node.remove();
       this.#wireViewerState();
       this.#syncToolbar();
@@ -515,14 +534,14 @@ export class FilePreviewElement extends HTMLElement {
     }
   }
 
-  #wireViewerState() {
+  #wireViewerState(): void {
     const inst = this.#instance;
     if (!inst) return;
 
     const hasZoom = typeof inst.zoomIn === 'function';
     this.#zoomGroup.style.display = hasZoom ? 'flex' : 'none';
     if (hasZoom) {
-      inst.onZoomChange?.((scale) => {
+      inst.onZoomChange?.((scale: number) => {
         this.#zoomLabel.textContent = `${Math.round(scale * 100)}%`;
       });
     }
@@ -532,7 +551,7 @@ export class FilePreviewElement extends HTMLElement {
     if (hasPages) {
       this.#pageInput.max = String(inst.pageCount);
       this.#pageTotal.textContent = `/ ${inst.pageCount}`;
-      inst.onPageChange?.((page, total) => {
+      inst.onPageChange?.((page: number, total: number) => {
         this.#pageInput.value = String(page);
         this.#pageTotal.textContent = `/ ${total}`;
       });
@@ -541,7 +560,7 @@ export class FilePreviewElement extends HTMLElement {
     this.#syncControlsVisibility();
   }
 
-  #showOfficeFrame() {
+  #showOfficeFrame(): void {
     if (!this.#source) return;
     this.#teardown();
     this.#stage.replaceChildren();
@@ -551,7 +570,7 @@ export class FilePreviewElement extends HTMLElement {
     this.#syncToolbar();
   }
 
-  #showUnsupported() {
+  #showUnsupported(): void {
     if (!this.#source) return;
     this.#stage.replaceChildren();
     const config = getConfig();
@@ -576,7 +595,7 @@ export class FilePreviewElement extends HTMLElement {
     );
   }
 
-  #renderError(error, source) {
+  #renderError(error: PreviewError, source: Source | null): void {
     this.#stage.replaceChildren();
     const config = getConfig();
     this.#stage.append(

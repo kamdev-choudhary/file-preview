@@ -1,6 +1,9 @@
 import { configure, formatBytes, openPreview, FilePreviewElement } from '../src/index.js';
 import type { ChangeDetail, ErrorDetail, LoadDetail } from '../src/index.js';
 
+// Retain FilePreviewElement custom element definition for static HTML <file-preview> tags
+void FilePreviewElement;
+
 /**
  * Point pdf.js at the worker Vite emits from node_modules, instead of letting
  * the library fall back to its CDN. This is the exact line the README tells

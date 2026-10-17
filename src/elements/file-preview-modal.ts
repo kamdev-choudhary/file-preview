@@ -52,9 +52,7 @@ export class FilePreviewModalElement extends HTMLElement {
     applyStyles(shadow, sheet);
 
     this.#backdrop = el('div', { class: 'fp-backdrop', part: 'backdrop' });
-    // Constructed rather than `new FilePreviewElement()` so the element is
-    // always upgraded through the registry, whatever defined it first.
-    this.#preview = document.createElement('file-preview') as FilePreviewElement;
+    this.#preview = new FilePreviewElement();
     const theme = this.getAttribute('theme');
     if (theme) this.#preview.setAttribute('theme', theme);
     this.#preview.setAttribute('closable', '');

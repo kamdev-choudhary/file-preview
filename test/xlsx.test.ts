@@ -34,6 +34,10 @@ group('formatExcelDate', () => {
   it('formats fractional-day serial numbers with time', () => {
     expect(formatExcelDate(45292.5)).toBe('2024-01-01 12:00');
   });
+
+  it('returns original string if serial produces invalid date', () => {
+    expect(formatExcelDate(NaN)).toBe('NaN');
+  });
 });
 
 group('parseXlsx', () => {
@@ -47,6 +51,7 @@ group('parseXlsx', () => {
   <sheets>
     <sheet name="Sales" sheetId="1" r:id="rId1"/>
     <sheet name="Meta" sheetId="2" r:id="rId2"/>
+    <sheet name="Missing" sheetId="3" r:id="rId3"/>
   </sheets>
 </workbook>`,
     );
@@ -56,7 +61,7 @@ group('parseXlsx', () => {
       `<?xml version="1.0" encoding="UTF-8"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
   <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
-  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/>
+  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="/xl/worksheets/sheet2.xml"/>
 </Relationships>`,
     );
 
@@ -75,11 +80,12 @@ group('parseXlsx', () => {
       `<?xml version="1.0" encoding="UTF-8"?>
 <styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
   <numFmts count="1">
-    <numFmt numFmtId="165" formatCode="yyyy-mm-dd"/>
+    <numFmt numFmtId="165" formatCode="[$-409]yyyy-mm-dd"/>
   </numFmts>
-  <cellXfs count="3">
+  <cellXfs count="4">
     <xf numFmtId="0"/>
     <xf numFmtId="14"/>
+    <xf numFmtId="165"/>
     <xf numFmtId="165"/>
   </cellXfs>
 </styleSheet>`,
@@ -89,7 +95,7 @@ group('parseXlsx', () => {
       'xl/worksheets/sheet1.xml',
       `<?xml version="1.0" encoding="UTF-8"?>
 <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
-  <dimension ref="A1:C3"/>
+  <dimension ref="A1:C4"/>
   <sheetData>
     <row r="1">
       <c r="A1" t="s"><v>0</v></c>
@@ -101,10 +107,13 @@ group('parseXlsx', () => {
       <c r="B2"><v>49.99</v></c>
       <c r="C2" s="1"><v>45292</v></c>
     </row>
-    <row r="3">
-      <c r="A3" t="inlineStr"><is><t>Gadget</t></is></c>
-      <c r="B3" t="b"><v>1</v></c>
-      <c r="C3" t="e"><v>#N/A</v></c>
+    <!-- Sparse row 4 (row 3 is skipped) with sparse col C (col B is skipped) -->
+    <row r="4">
+      <c r="A4" t="inlineStr"><is><t>Gadget</t></is></c>
+      <c r="C4" s="2"><v>not-a-number</v></c>
+      <c r="D4" t="s"><v>999</v></c>
+      <c r="E4" t="b"><v>1</v></c>
+      <c r="F4" t="e"><v>#N/A</v></c>
     </row>
   </sheetData>
 </worksheet>`,
@@ -130,20 +139,24 @@ group('parseXlsx', () => {
     const buf = await createMockWorkbook();
     const sheets = await parseXlsx(buf);
 
-    expect(sheets).toHaveLength(2);
+    expect(sheets).toHaveLength(3);
 
-    const [sales, meta] = sheets;
+    const [sales, meta, missing] = sheets;
     expect(sales?.name).toBe('Sales');
-    expect(sales?.rows).toEqual([
-      ['Item', 'Price', 'Date'],
-      ['Widget Pro', '49.99', '2024-01-01'],
-      ['Gadget', 'TRUE', '#N/A'],
-    ]);
-    expect(sales?.totalRows).toBe(3);
-    expect(sales?.totalCols).toBe(3);
+    expect(sales?.rows[0]).toEqual(['Item', 'Price', 'Date']);
+    expect(sales?.rows[1]).toEqual(['Widget Pro', '49.99', '2024-01-01']);
+    // Sparse row 3 is empty array
+    expect(sales?.rows[2]).toEqual([]);
+    // Sparse row 4 has skipped col B as ''
+    expect(sales?.rows[3]).toEqual(['Gadget', '', 'not-a-number', '', 'TRUE', '#N/A']);
+    expect(sales?.totalRows).toBe(4);
 
     expect(meta?.name).toBe('Meta');
     expect(meta?.rows).toEqual([['Formulas computed']]);
+
+    expect(missing?.name).toBe('Missing');
+    expect(missing?.rows).toEqual([]);
+    expect(missing?.totalRows).toBe(0);
   });
 
   it('honors maxRows and maxCols options', async () => {
@@ -152,7 +165,7 @@ group('parseXlsx', () => {
 
     const sales = sheets[0];
     expect(sales?.rows).toEqual([['Item', 'Price']]);
-    expect(sales?.totalRows).toBe(3); // dimension preserved
+    expect(sales?.totalRows).toBe(4); // dimension preserved
   });
 
   it('throws PASSWORD on encrypted workbook files', async () => {

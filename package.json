@@ -1,6 +1,6 @@
 {
   "name": "fileon",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Framework-free universal file preview web component. Images, PDF, Office docs, media, code, archives — inline or full-screen modal.",
   "type": "module",
   "license": "MIT",

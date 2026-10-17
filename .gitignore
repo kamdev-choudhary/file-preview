@@ -8,3 +8,7 @@ public/samples/
 .DS_Store
 .vite/
 *.tgz
+
+
+**/node_modules/**/.astro
+.astro/

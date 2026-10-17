@@ -1,0 +1,84 @@
+---
+title: Functions
+description: openPreview, renderPreview, configure, registerViewer and the rest of the public API.
+---
+
+## `openPreview(input, options?)`
+
+Opens the full-screen modal and returns a handle. One modal is reused per document, so calling
+it twice never fights over focus.
+
+```js
+const handle = openPreview(files, {
+  index: 0,                 // which file in a gallery to open on
+  theme: 'dark',            // 'light' | 'dark' — omit to follow the OS
+  onLoad: ({ source, viewer }) => {},
+  onError: ({ source, error }) => {},
+  onChange: ({ index, source }) => {},
+  onClose: () => {},
+});
+
+handle.element; // the <file-preview-modal>
+handle.go(2);
+handle.close();
+```
+
+`openGallery` is an alias that reads better when you are passing an array.
+
+## `renderPreview(target, input, options?)`
+
+Renders inline into an element or a selector, and returns the `<file-preview>` element.
+
+```js
+const viewer = renderPreview('#viewer', '/report.pdf', {
+  theme: 'dark',
+  toolbar: true,
+  bordered: true,
+  minHeight: '520px',
+});
+
+viewer.file = '/another.xlsx'; // swap without re-rendering
+```
+
+## What you can pass
+
+Every entry point accepts the same shapes:
+
+| Input              | Example                                       |
+| ------------------ | --------------------------------------------- |
+| URL string         | `'/report.pdf'`                               |
+| `File`             | from an `<input type="file">` or a drop event |
+| `Blob`             | `new Blob([bytes], { type: 'application/pdf' })` |
+| `ArrayBuffer`      | bytes you already hold                        |
+| Data URI           | `'data:application/pdf;base64,…'`             |
+| Descriptor object  | see below                                     |
+| An array of any    | becomes a gallery                             |
+
+### Descriptor objects
+
+Use one when the URL alone doesn't carry enough: a signed link with no extension, or an
+endpoint that needs credentials.
+
+```js
+openPreview({
+  url: 'https://api.example.com/files/8fa21c',
+  name: 'Q3 report.xlsx', // gives the detector an extension to work with
+  type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  headers: { Authorization: `Bearer ${token}` },
+  credentials: 'include',
+});
+```
+
+## Utilities
+
+| Export            | Purpose                                                        |
+| ----------------- | -------------------------------------------------------------- |
+| `configure`       | Set library-wide options. See [configuration](/fileon/reference/configuration/). |
+| `getConfig`       | Read the current configuration back.                            |
+| `registerViewer`  | Add or override a viewer. See [custom viewers](/fileon/reference/custom-viewers/). |
+| `listViewers`     | A copy of the registry, for debugging.                          |
+| `toSource`        | Normalise any accepted input into a `Source`.                   |
+| `describe`        | Run type detection over `{ name, mime, bytes }`.                |
+| `formatBytes`     | `1048576` becomes `"1.0 MB"`.                                   |
+| `Kind`            | The viewer categories: `IMAGE`, `PDF`, `DOC`, `SHEET` and so on.|
+| `PreviewError`    | The error class every failure uses.                             |

@@ -1,0 +1,34 @@
+---
+title: Events
+description: fp-load, fp-error, fp-change and fp-close.
+---
+
+All four bubble and cross the shadow boundary, so you can listen on an ancestor rather than on
+the element itself.
+
+| Event       | `detail`                         | Fires when                       |
+| ----------- | -------------------------------- | -------------------------------- |
+| `fp-load`   | `{ source, viewer }`             | A viewer finished rendering      |
+| `fp-error`  | `{ source, error }`              | A load or decode failed          |
+| `fp-change` | `{ index, source }`              | The gallery moved to another file |
+| `fp-close`  | —                                | The modal closed                  |
+
+`source` is the resolved `Source`: `name`, `size`, `kind`, `ext`, `mime` and `url`.
+`viewer` is the winning viewer's id, such as `pdf`, `sheet` or `doc`.
+
+```js
+document.addEventListener('fp-load', (event) => {
+  const { source, viewer } = event.detail;
+  analytics.track('preview_opened', { kind: source.kind, viewer });
+});
+```
+
+The callback options on `openPreview()` are a thin wrapper over the same events, rebound on
+each call so a second `openPreview()` never accumulates listeners from the first.
+
+```js
+openPreview(url, {
+  onLoad: ({ viewer }) => {},
+  onError: ({ error }) => {},
+});
+```

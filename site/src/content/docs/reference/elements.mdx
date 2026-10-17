@@ -1,0 +1,59 @@
+---
+title: Elements
+description: The file-preview and file-preview-modal custom elements, their attributes and properties.
+---
+
+Importing the package registers both elements. You never construct
+`<file-preview-modal>` yourself — `openPreview()` manages one per document.
+
+## `<file-preview>`
+
+```html
+<file-preview
+  src="/file.pdf"
+  name="Report.pdf"
+  type="application/pdf"
+  theme="dark"
+  toolbar="false"
+  download="false"
+  bordered
+></file-preview>
+```
+
+### Attributes
+
+| Attribute  | Values            | Notes                                              |
+| ---------- | ----------------- | -------------------------------------------------- |
+| `src`      | URL               | The file to show                                    |
+| `name`     | string            | Overrides the name derived from the URL             |
+| `type`     | MIME type         | Overrides the server's `Content-Type`               |
+| `theme`    | `light` \| `dark` | Omit to follow the operating system                 |
+| `toolbar`  | `false`           | Hides the toolbar entirely                          |
+| `download` | `false`           | Hides just the download button                      |
+| `bordered` | boolean           | Draws a border and rounds the corners               |
+
+### Properties and methods
+
+```js
+const el = document.querySelector('file-preview');
+
+el.file = someBlob;  // assign any accepted input, not just a URL
+el.src = '/other.pdf';
+el.source;           // the resolved Source once loaded, else null
+el.reload();
+el.clear();
+await el.download();
+```
+
+`file` is a property, not an attribute — it accepts `File`, `Blob`, `ArrayBuffer` and
+descriptor objects, none of which survive being stringified into HTML.
+
+## Sizing
+
+The element fills its container and honours `--fp-min-height`:
+
+```css
+file-preview {
+  --fp-min-height: 600px;
+}
+```

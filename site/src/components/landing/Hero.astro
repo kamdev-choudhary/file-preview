@@ -11,28 +11,55 @@ const { version } = JSON.parse(
 
 <section class="fo-hero">
   <div class="fo-hero-copy">
-    <h1>Preview any file,<br />right where it lives.</h1>
+    <h1>Preview any file, right where it lives.</h1>
     <p class="fo-lede">
       One custom element renders PDFs, Word and PowerPoint documents, spreadsheets, images,
-      video, code and archives — in the browser, with no upload and no server. It works in plain
-      HTML and in every framework, because it is only a custom element.
+      video, code and archives — in the browser, with no upload and no server.
     </p>
-    <div class="fo-stats">
-      <span><strong>17 kB</strong> entry, gzipped</span>
-      <span><strong>60+</strong> formats</span>
-      <span><strong>0</strong> framework dependencies</span>
+
+    <dl class="fo-stats">
+      <div>
+        <dt>17 kB</dt>
+        <dd>entry, gzipped</dd>
+      </div>
+      <div>
+        <dt>60+</dt>
+        <dd>formats read</dd>
+      </div>
+      <div>
+        <dt>0</dt>
+        <dd>framework deps</dd>
+      </div>
+    </dl>
+
+    <div class="fo-install-row">
+      <div class="fo-install">
+        <code>npm i fileon</code>
+        <button class="fo-copy" type="button" data-copy="npm i fileon">Copy</button>
+      </div>
+      <a class="fo-npm" href="https://www.npmjs.com/package/fileon" rel="noopener">
+        View on npm<span class="fo-ver">v{version}</span>
+      </a>
     </div>
   </div>
 
   <!-- The product's defining moment is "drop a file, see it render", so that
        is the hero rather than a picture of one. -->
-  <div class="fo-try" id="try">
-    <div class="fo-zone" id="try-zone">
+  <div class="fo-hero-panel">
+    <div class="fo-zone" id="try">
       <input type="file" id="file-input" multiple class="fo-hidden" />
+
+      <span class="fo-zone-icon" aria-hidden="true">
+        <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.1">
+          <rect x="9" y="6" width="22" height="28" rx="4" opacity=".32"></rect>
+          <path d="M17 14h26a4 4 0 0 1 4 4v20a4 4 0 0 1-4 4H21a4 4 0 0 1-4-4V14Z" fill="none"
+          ></path>
+          <path d="M24 22v12M18 28h12" stroke-linecap="round" transform="translate(8 0)"></path>
+        </svg>
+      </span>
+
       <p class="fo-zone-head">Drop a file to preview it</p>
-      <p class="fo-zone-sub">
-        Nothing is uploaded. Everything here runs in this tab, on your file.
-      </p>
+      <p class="fo-zone-sub">Nothing is uploaded. It all runs in this tab, on your file.</p>
       <button class="fo-btn fo-btn-primary" id="pick" type="button">Choose a file</button>
     </div>
 
@@ -46,16 +73,5 @@ const { version } = JSON.parse(
         }
       </div>
     </div>
-  </div>
-
-  <div class="fo-install-row">
-    <div class="fo-install">
-      <code>npm i fileon</code>
-      <button class="fo-copy" type="button" data-copy="npm i fileon">Copy</button>
-    </div>
-    <a class="fo-npm" href="https://www.npmjs.com/package/fileon" rel="noopener">
-      Read it on npm
-      <span class="fo-ver">v{version}</span>
-    </a>
   </div>
 </section>

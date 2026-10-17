@@ -25,6 +25,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   files, Word 6.0/95 documents and `.docx` files misnamed `.doc` each get their
   own specific message instead of a generic failure.
 
+- **A documentation site replaces the single-page demo.** The old `index.html`
+  demo is now an Astro + Starlight site under `site/`, with full-text search,
+  a landing page whose hero is a working drop target, and reference pages for
+  every function, attribute, event, config key and error code. It builds from
+  `src/` directly rather than from `dist/`, so the published page is always a
+  live test of the current source. `pnpm dev` now serves it on port 4321.
+
 ### Fixed
 
 - **Images are centred in the viewport.** Two different elements both answered

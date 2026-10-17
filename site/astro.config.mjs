@@ -74,5 +74,23 @@ export default defineConfig({
     resolve: {
       alias: { fileon: librarySource },
     },
+    optimizeDeps: {
+      /*
+       * The library reaches its parsers through dynamic imports, so Vite's
+       * scanner only discovers them the first time a viewer opens. That left
+       * the first PDF or Word file racing a dependency re-optimisation, which
+       * invalidates in-flight imports and surfaces as a DEPENDENCY error.
+       * Naming them here pre-bundles them at startup instead.
+       */
+      include: [
+        'dompurify',
+        'highlight.js/lib/core',
+        'highlight.js/lib/languages/*',
+        'jszip',
+        'mammoth/mammoth.browser.js',
+        'marked',
+        'pdfjs-dist',
+      ],
+    },
   },
 });

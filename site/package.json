@@ -11,6 +11,12 @@
   "dependencies": {
     "@astrojs/starlight": "^0.42.6",
     "astro": "^7.4.0",
-    "fileon": "workspace:*"
+    "fileon": "workspace:*",
+    "dompurify": "^3.4.14",
+    "highlight.js": "^11.12.0",
+    "jszip": "^3.10.1",
+    "mammoth": "^1.12.1",
+    "marked": "^18.0.10",
+    "pdfjs-dist": "^6.2.108"
   }
 }

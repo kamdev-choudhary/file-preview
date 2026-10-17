@@ -1,7 +1,7 @@
 {
   "name": "fileon",
-  "version": "1.0.2",
-  "description": "Framework-free universal file preview web component. Images, PDF, Office docs, media, code, archives \u2014 inline or full-screen modal.",
+  "version": "1.0.3",
+  "description": "Framework-free universal file preview web component. Images, PDF, Office docs, media, code, archives — inline or full-screen modal.",
   "type": "module",
   "license": "MIT",
   "author": "kamdev-choudhary (https://github.com/kamdev-choudhary)",

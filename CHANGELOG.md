@@ -6,6 +6,25 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- **Legacy `.doc` files preview natively.** Previously they fell through to the
+  download card, because mammoth reads OOXML and `.doc` is not OOXML — it is an
+  OLE2 container of binary records predating the `.docx` package format. There
+  is no credible browser library for it, so the library now ships its own
+  reader: `src/core/cfb.ts` walks the OLE2 container, and `src/core/doc.ts`
+  reassembles the document text from the FIB and its piece table, decoding both
+  the Windows-1252 and UTF-16 runs a single file can mix. No new dependency,
+  and the viewer is lazy-loaded like every other one.
+
+  Fidelity is **text only** — paragraphs, tables and field results, with no
+  formatting. Reading character and paragraph properties would mean a parser
+  several times the size for the part of a document a reader can most easily do
+  without, so the viewer states the limitation above every document and the
+  toolbar still offers the Office viewer when layout matters. Password-protected
+  files, Word 6.0/95 documents and `.docx` files misnamed `.doc` each get their
+  own specific message instead of a generic failure.
+
 ### Fixed
 
 - **Images are centred in the viewport.** Two different elements both answered

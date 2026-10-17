@@ -96,6 +96,7 @@ renderPreview('#viewer', myFile, { minHeight: '600px', bordered: true });
 | Images        | png, jpg, gif, webp, avif, svg, bmp, ico, tiff¹ | native                  | exact, zoom + pan                                |
 | PDF           | pdf                                             | pdf.js                  | exact, lazy per-page                             |
 | Word          | docx, docm                                      | mammoth                 | **approximate** — semantic HTML, not page layout |
+| Legacy Word   | doc                                             | built-in OLE2 reader    | **text only** — paragraphs and tables            |
 | PowerPoint    | pptx, pptm                                      | built-in OOXML reader   | **content only** — text, images, notes           |
 | Spreadsheets  | xlsx, xlsm                                      | built-in OpenXML parser | values as a grid (zero extra dependencies)       |
 | Legacy sheets | xls, ods                                        | SheetJS _(opt-in)_      | values as a grid                                 |
@@ -115,10 +116,17 @@ Anything unrecognised gets a clean download card rather than a broken view.
 
 ### A note on Office fidelity
 
-`.docx` and `.pptx` are converted **in the browser**, so nothing leaves the user's machine —
-but they are not pixel-accurate. Word documents become clean semantic HTML (headings, tables,
-bold/italic, inline images); page geometry, headers/footers and text boxes are dropped.
-PowerPoint files give you text, images and presenter notes, not slide layout or theming.
+`.doc`, `.docx` and `.pptx` are converted **in the browser**, so nothing leaves the user's
+machine — but they are not pixel-accurate. Word documents become clean semantic HTML
+(headings, tables, bold/italic, inline images); page geometry, headers/footers and text boxes
+are dropped. PowerPoint files give you text, images and presenter notes, not slide layout or
+theming.
+
+Legacy `.doc` is the most reduced of the three. It is not a zipped XML package but an OLE2
+container of binary records, so it gets its own reader (no extra dependency) that recovers
+**text only**: paragraphs, tables and field results, with no formatting at all. Table
+structure is inferred from Word's cell marks, which is exact for ordinary tables and
+approximate for merged layouts. The viewer always says so above the document.
 
 When exact rendering matters and the file sits at a **public URL**, the toolbar offers
 _Open in Microsoft Office viewer_, which renders it server-side at full fidelity. That sends

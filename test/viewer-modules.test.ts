@@ -13,6 +13,7 @@ group('built-in viewer modules', () => {
   it('registers the expected set', () => {
     expect(builtins.map((v) => v.id).sort()).toEqual([
       'archive',
+      'doc',
       'docx',
       'font',
       'image',

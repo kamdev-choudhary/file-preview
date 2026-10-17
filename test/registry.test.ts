@@ -28,6 +28,7 @@ group('built-in viewers', () => {
     ['data.csv', 'sheet'],
     ['book.xlsx', 'sheet'],
     ['contract.docx', 'docx'],
+    ['legacy.doc', 'doc'],
     ['deck.pptx', 'pptx'],
     ['notes.md', 'markdown'],
     ['main.ts', 'text'],
@@ -40,7 +41,7 @@ group('built-in viewers', () => {
   });
 
   it('declines formats no bundled engine can render', () => {
-    for (const name of ['old.doc', 'old.ppt', 'notes.rtf', 'text.odt', 'bundle.rar']) {
+    for (const name of ['old.ppt', 'notes.rtf', 'text.odt', 'bundle.rar']) {
       expect(resolveViewer(toSource(`/files/${name}`))).toBeNull();
     }
   });

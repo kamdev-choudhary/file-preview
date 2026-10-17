@@ -149,10 +149,18 @@ registerViewer({
 registerViewer({
   id: 'docx',
   label: 'Document',
-  // mammoth reads OOXML only; .doc/.rtf/.odt score lower and get the
-  // download card plus an Office-viewer offer instead of a broken render.
+  // mammoth reads OOXML only; .rtf/.odt score lower and get the download
+  // card plus an Office-viewer offer instead of a broken render.
   match: (s) => (s.kind === Kind.DOC && /^(docx|docm)$/.test(s.ext) ? 1 : 0),
   load: () => import('../viewers/docx.js'),
+});
+
+registerViewer({
+  id: 'doc',
+  label: 'Document',
+  // Legacy binary Word, read natively. Text only — see src/core/doc.ts.
+  match: (s) => (s.kind === Kind.DOC && s.ext === 'doc' ? 1 : 0),
+  load: () => import('../viewers/doc.js'),
 });
 
 registerViewer({

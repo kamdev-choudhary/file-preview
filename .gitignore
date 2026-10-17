@@ -1,15 +1,13 @@
 node_modules/
 dist/
-site/dist/
-site/.astro/
 coverage/
-site/public/samples/
 .probe/
 *.log
 .DS_Store
 .vite/
 *.tgz
 
-
-**/node_modules/**/.astro
-.astro/
+# Documentation site
+site/dist/
+site/.astro/
+site/public/samples/

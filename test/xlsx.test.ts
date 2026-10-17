@@ -193,6 +193,31 @@ group('parseXlsx', () => {
     await expect(parseXlsx(buf)).rejects.toMatchObject({ code: 'DECODE' });
   });
 
+  it('falls back to default sheet paths when rels file is missing', async () => {
+    const zip = new JSZip();
+    zip.file(
+      'xl/workbook.xml',
+      `<?xml version="1.0" encoding="UTF-8"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <sheets>
+    <sheet name="Fallback" sheetId="1"/>
+  </sheets>
+</workbook>`,
+    );
+    zip.file(
+      'xl/worksheets/sheet1.xml',
+      `<?xml version="1.0" encoding="UTF-8"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <sheetData>
+    <row r="1"><c r="A1"><v>Direct</v></c></row>
+  </sheetData>
+</worksheet>`,
+    );
+    const buf = await zip.generateAsync({ type: 'arraybuffer' });
+    const sheets = await parseXlsx(buf);
+    expect(sheets[0]?.rows).toEqual([['Direct']]);
+  });
+
   it('aborts when signal is triggered', async () => {
     const buf = await createMockWorkbook();
     const controller = new AbortController();

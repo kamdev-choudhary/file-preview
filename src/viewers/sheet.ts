@@ -1,28 +1,20 @@
 import { el, disposer } from '../ui/dom.js';
 import { PreviewError } from '../core/errors.js';
 import { parseCsv, toCsv } from '../core/csv.js';
+import { parseXlsx, type SheetData } from '../core/xlsx.js';
 import { Kind } from '../core/mime.js';
 import type { ToolbarAction, ViewerContext, ViewerInstance } from '../core/registry.js';
 
-/** One tab's worth of grid data, already capped to what we will render. */
-interface SheetData {
-  name: string;
-  rows: string[][];
-  totalRows: number;
-  totalCols: number;
-}
+export type { SheetData };
 
 /**
  * Spreadsheets and delimited text, rendered as a real grid with sticky headers.
  *
- * Two paths:
+ * Paths:
  *   - CSV/TSV      built-in parser, zero dependencies
- *   - xlsx/xls/ods SheetJS, which the host application injects via
- *                  `configure({ loaders: { xlsx: () => import('xlsx') } })`
- *
- * SheetJS is not a hard dependency because its npm build is frozen at 0.18.5
- * with unfixed prototype-pollution and ReDoS advisories. Making it opt-in keeps
- * that decision — and that risk — with the application that chooses to take it.
+ *   - XLSX/XLSM    built-in native OpenXML parser (via JSZip), zero extra dependencies
+ *   - Legacy/ODS   SheetJS loader (opt-in via configure({ loaders: { xlsx } }))
+
  *
  * Only the active sheet is turned into DOM, and it is capped; a 200k-row export
  * would otherwise lock up the tab. The cap is always reported, never silent.
@@ -194,20 +186,35 @@ async function loadDelimited(ctx: ViewerContext): Promise<SheetData[]> {
   ];
 }
 
-/** Binary workbooks via a host-supplied SheetJS. */
+/** Binary workbooks via native XLSX parser or host-supplied SheetJS. */
 async function loadWorkbook(
   ctx: ViewerContext,
 ): Promise<{ sheets: SheetData[]; toCsv: (sheet: SheetData) => string }> {
   const { source, signal, config } = ctx;
   const loader = config.loaders?.xlsx;
+  const isLegacy = source.ext === 'xls' || source.ext === 'ods';
+
+  // Native OpenXML parser: zero dependencies for .xlsx / .xlsm
+  if (!isLegacy && !loader) {
+    ctx.setStatus('Downloading…');
+    const buf = await source.arrayBuffer({ signal, onProgress: ctx.setProgress });
+    if (signal.aborted) throw new DOMException('aborted', 'AbortError');
+
+    ctx.setStatus('Parsing…');
+    const sheets = await parseXlsx(buf, { maxRows: MAX_ROWS, maxCols: MAX_COLS, signal });
+    return { sheets, toCsv: (s) => toCsv(s.rows) };
+  }
 
   if (typeof loader !== 'function') {
-    throw new PreviewError('DEPENDENCY', 'Spreadsheet preview is not set up in this app.', {
-      hint:
-        'Binary spreadsheets need SheetJS, which is not bundled by default because ' +
-        'its npm release has unfixed security advisories. Enable it with: ' +
-        "configure({ loaders: { xlsx: () => import('xlsx') } })",
-    });
+    throw new PreviewError(
+      'UNSUPPORTED',
+      'Legacy spreadsheet formats (.xls, .ods) require SheetJS.',
+      {
+        hint:
+          'Save as modern .xlsx for zero-config native preview, or enable a loader: ' +
+          "configure({ loaders: { xlsx: () => import('xlsx') } })",
+      },
+    );
   }
 
   ctx.setStatus('Loading spreadsheet engine…');

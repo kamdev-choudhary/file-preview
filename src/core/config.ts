@@ -28,15 +28,11 @@ export interface PreviewConfig {
   /**
    * Injection points for heavy parsers.
    *
-   * `xlsx` has no default on purpose. The npm build of SheetJS is frozen at
-   * 0.18.5 and carries unfixed prototype-pollution and ReDoS advisories that
-   * trigger on exactly the thing this library does — parsing untrusted files.
-   * Rather than ship that to every consumer, the binary-spreadsheet viewer asks
-   * you to supply SheetJS yourself, so you choose the build and own the risk:
+   * XLSX, CSV, and TSV spreadsheets are parsed natively with zero extra
+   * dependencies. If you need support for legacy `.xls` or `.ods` spreadsheets,
+   * you can supply an optional SheetJS loader:
    *
    *   configure({ loaders: { xlsx: () => import('xlsx') } })
-   *
-   * CSV and TSV never need this — they use the built-in parser.
    */
   loaders: {
     xlsx: XlsxLoader | null;

@@ -5,9 +5,5 @@
 onlyBuiltDependencies:
   - esbuild
 
-# Do NOT auto-install optional peers. `xlsx` is an intentionally opt-in peer:
-# the npm build of SheetJS is frozen at 0.18.5 with unfixed prototype-pollution
-# and ReDoS advisories that fire while parsing untrusted files — exactly what
-# this library does. Installing it here would quietly undo that decision for
-# every contributor and CI run. Consumers opt in explicitly via configure().
+# Keep peer dependency auto-installation off for clean builds.
 autoInstallPeers: false

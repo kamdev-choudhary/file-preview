@@ -47,8 +47,8 @@ pnpm add fileon     # or: npm install fileon · yarn add fileon
 
 ESM only, no build step required, no peer dependencies you must install.
 
-Binary spreadsheets (`.xlsx`, `.xls`, `.ods`) need one extra step — see
-[Spreadsheets](#spreadsheets-xlsx-xls-ods). CSV and TSV work out of the box.
+Modern spreadsheets (`.xlsx`, `.xlsm`), CSV, and TSV work out of the box with zero setup.
+Legacy binary spreadsheets (`.xls`, `.ods`) can optionally be enabled with an external loader.
 
 ---
 
@@ -91,21 +91,22 @@ renderPreview('#viewer', myFile, { minHeight: '600px', bordered: true });
 
 ## Supported files
 
-| Category     | Formats                                         | Engine                | Fidelity                                         |
-| ------------ | ----------------------------------------------- | --------------------- | ------------------------------------------------ |
-| Images       | png, jpg, gif, webp, avif, svg, bmp, ico, tiff¹ | native                | exact, zoom + pan                                |
-| PDF          | pdf                                             | pdf.js                | exact, lazy per-page                             |
-| Word         | docx, docm                                      | mammoth               | **approximate** — semantic HTML, not page layout |
-| PowerPoint   | pptx, pptm                                      | built-in OOXML reader | **content only** — text, images, notes           |
-| Spreadsheets | xlsx, xls, xlsb, ods                            | SheetJS _(opt-in)_    | values as a grid                                 |
-| Delimited    | csv, tsv                                        | built-in parser       | full, RFC 4180                                   |
-| Markdown     | md, markdown, mdx                               | marked + DOMPurify    | rendered + sanitised                             |
-| Code / text  | 50+ extensions                                  | highlight.js          | syntax highlighted                               |
-| Data         | json, jsonl, geojson                            | built-in              | pretty-printed                                   |
-| Video        | mp4, webm, mov, ogv²                            | native                | streams, no full download                        |
-| Audio        | mp3, wav, ogg, m4a, flac, opus                  | native                | streams                                          |
-| Archives     | zip, jar                                        | JSZip                 | file listing                                     |
-| Fonts        | woff, woff2, ttf, otf                           | FontFace              | live specimen                                    |
+| Category      | Formats                                         | Engine                  | Fidelity                                         |
+| ------------- | ----------------------------------------------- | ----------------------- | ------------------------------------------------ |
+| Images        | png, jpg, gif, webp, avif, svg, bmp, ico, tiff¹ | native                  | exact, zoom + pan                                |
+| PDF           | pdf                                             | pdf.js                  | exact, lazy per-page                             |
+| Word          | docx, docm                                      | mammoth                 | **approximate** — semantic HTML, not page layout |
+| PowerPoint    | pptx, pptm                                      | built-in OOXML reader   | **content only** — text, images, notes           |
+| Spreadsheets  | xlsx, xlsm                                      | built-in OpenXML parser | values as a grid (zero extra dependencies)       |
+| Legacy sheets | xls, ods                                        | SheetJS _(opt-in)_      | values as a grid                                 |
+| Delimited     | csv, tsv                                        | built-in parser         | full, RFC 4180                                   |
+| Markdown      | md, markdown, mdx                               | marked + DOMPurify      | rendered + sanitised                             |
+| Code / text   | 50+ extensions                                  | highlight.js            | syntax highlighted                               |
+| Data          | json, jsonl, geojson                            | built-in                | pretty-printed                                   |
+| Video         | mp4, webm, mov, ogv²                            | native                  | streams, no full download                        |
+| Audio         | mp3, wav, ogg, m4a, flac, opus                  | native                  | streams                                          |
+| Archives      | zip, jar                                        | JSZip                   | file listing                                     |
+| Fonts         | woff, woff2, ttf, otf                           | FontFace                | live specimen                                    |
 
 Anything unrecognised gets a clean download card rather than a broken view.
 
@@ -244,16 +245,21 @@ That one line works in Vite, webpack 5 and Rollup. For full offline support, als
 `node_modules/pdfjs-dist/standard_fonts/` and `cmaps/` into your public directory and set
 `pdfStandardFontDataUrl` and `pdfCMapUrl`.
 
-### Spreadsheets (xlsx, xls, ods)
+### Spreadsheets (xlsx, csv, tsv)
 
-Binary spreadsheets need SheetJS, which this package **deliberately does not bundle**.
-The npm release of `xlsx` is frozen at 0.18.5 and carries two unfixed high-severity advisories
-([prototype pollution](https://github.com/advisories/GHSA-4r6h-8v6p-xvw6),
-[ReDoS](https://github.com/advisories/GHSA-5pgg-2g8v-p4x9)) that trigger while parsing untrusted
-files — exactly what a file previewer does. Shipping it as a dependency would put that advisory
-on every project that installs this one, so the choice stays yours.
+Modern `.xlsx` and `.xlsm` work **out of the box with zero external dependencies**. The viewer includes a native OpenXML parser that extracts cell values, shared strings, and dates directly using the bundled `jszip` engine and browser `DOMParser`.
 
-**Recommended** — the maintained build from SheetJS's own CDN, which fixes both:
+No extra installation or configuration is required:
+
+```js
+openPreview('https://example.com/financials.xlsx');
+```
+
+**CSV and TSV** are also parsed out of the box via a built-in RFC 4180 parser.
+
+#### Legacy Spreadsheets (.xls, .ods)
+
+Legacy binary Excel (`.xls`) and OpenDocument spreadsheets (`.ods`) are not OpenXML formats. If your application needs to support them, you can optionally supply a SheetJS loader:
 
 ```js
 configure({
@@ -262,19 +268,6 @@ configure({
   },
 });
 ```
-
-Or install it yourself and accept the npm version, advisories included:
-
-```bash
-pnpm add xlsx          # or: npm install xlsx
-```
-
-```js
-configure({ loaders: { xlsx: () => import('xlsx') } });
-```
-
-Without this, `.xlsx` files show a clear message explaining the setup step.
-**CSV and TSV never need it** — they use a built-in RFC 4180 parser.
 
 ---
 

@@ -81,14 +81,6 @@
     "marked": "^18.0.10",
     "pdfjs-dist": "^6.2.108"
   },
-  "peerDependencies": {
-    "xlsx": ">=0.18.5"
-  },
-  "peerDependenciesMeta": {
-    "xlsx": {
-      "optional": true
-    }
-  },
   "devDependencies": {
     "@vitest/coverage-v8": "^4.0.18",
     "happy-dom": "^20.0.0",

@@ -3,7 +3,7 @@
 ## Reporting a vulnerability
 
 Please report security issues privately through
-[GitHub's private vulnerability reporting](https://github.com/kamdev-choudhary/previewkit/security/advisories/new)
+[GitHub's private vulnerability reporting](https://github.com/kamdev-choudhary/fileon/security/advisories/new)
 rather than opening a public issue.
 
 Include what you can: the affected version, a file or URL that reproduces it,

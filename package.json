@@ -1,17 +1,17 @@
 {
-  "name": "previewkit",
+  "name": "fileon",
   "version": "0.2.0",
   "description": "Framework-free universal file preview web component. Images, PDF, Office docs, media, code, archives \u2014 inline or full-screen modal.",
   "type": "module",
   "license": "MIT",
   "author": "kamdev-choudhary (https://github.com/kamdev-choudhary)",
-  "homepage": "https://kamdev-choudhary.github.io/previewkit/",
+  "homepage": "https://kamdev-choudhary.github.io/fileon/",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kamdev-choudhary/previewkit.git"
+    "url": "git+https://github.com/kamdev-choudhary/fileon.git"
   },
   "bugs": {
-    "url": "https://github.com/kamdev-choudhary/previewkit/issues"
+    "url": "https://github.com/kamdev-choudhary/fileon/issues"
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
@@ -70,7 +70,7 @@
     "xlsx",
     "pptx",
     "lightbox",
-    "previewkit",
+    "fileon",
     "typescript"
   ],
   "dependencies": {

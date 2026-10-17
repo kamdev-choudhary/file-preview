@@ -11,11 +11,11 @@ runtime API is unchanged apart from the import specifier.
 
 ### Changed — breaking
 
-- **Renamed from `@quartix/file-preview` to `previewkit`.** Update your imports:
+- **Renamed from `@quartix/file-preview` to `fileon`.** Update your imports:
 
   ```diff
   - import { openPreview } from '@quartix/file-preview';
-  + import { openPreview } from 'previewkit';
+  + import { openPreview } from 'fileon';
   ```
 
   The element names (`<file-preview>`, `<file-preview-modal>`), every exported
@@ -95,5 +95,5 @@ runtime API is unchanged apart from the import specifier.
 
 Initial public release as `@quartix/file-preview`.
 
-[0.2.0]: https://github.com/kamdev-choudhary/previewkit/releases/tag/v0.2.0
-[0.1.1]: https://github.com/kamdev-choudhary/previewkit/releases/tag/v0.1.1
+[0.2.0]: https://github.com/kamdev-choudhary/fileon/releases/tag/v0.2.0
+[0.1.1]: https://github.com/kamdev-choudhary/fileon/releases/tag/v0.1.1

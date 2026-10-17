@@ -1,10 +1,10 @@
-# previewkit
+# fileon
 
-[![npm](https://img.shields.io/npm/v/previewkit?color=0b7285)](https://www.npmjs.com/package/previewkit)
-[![CI](https://github.com/kamdev-choudhary/previewkit/actions/workflows/ci.yml/badge.svg)](https://github.com/kamdev-choudhary/previewkit/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/fileon?color=0b7285)](https://www.npmjs.com/package/fileon)
+[![CI](https://github.com/kamdev-choudhary/fileon/actions/workflows/ci.yml/badge.svg)](https://github.com/kamdev-choudhary/fileon/actions/workflows/ci.yml)
 [![entry size](https://img.shields.io/badge/entry-17%20kB%20gzip-0b7285)](#why-this-one)
-[![types](https://img.shields.io/npm/types/previewkit)](https://www.npmjs.com/package/previewkit)
-[![license](https://img.shields.io/npm/l/previewkit)](./LICENSE)
+[![types](https://img.shields.io/npm/types/fileon)](https://www.npmjs.com/package/fileon)
+[![license](https://img.shields.io/npm/l/fileon)](./LICENSE)
 
 A framework-free web component that previews **almost any file** — images, PDFs, Word,
 PowerPoint, spreadsheets, video, audio, code, Markdown, archives and fonts — from a URL,
@@ -13,12 +13,12 @@ a `File`, a `Blob`, an `ArrayBuffer` or a data URI.
 Drop it inline in a page, or open it full-screen in a Drive-style modal.
 
 ```js
-import { openPreview } from 'previewkit';
+import { openPreview } from 'fileon';
 
 openPreview('https://example.com/report.pdf');
 ```
 
-**[Live demo →](https://kamdev-choudhary.github.io/previewkit/)**
+**[Live demo →](https://kamdev-choudhary.github.io/fileon/)**
 
 ---
 
@@ -42,7 +42,7 @@ openPreview('https://example.com/report.pdf');
 ## Install
 
 ```bash
-pnpm add previewkit     # or: npm install previewkit · yarn add previewkit
+pnpm add fileon     # or: npm install fileon · yarn add fileon
 ```
 
 ESM only, no build step required, no peer dependencies you must install.
@@ -57,7 +57,7 @@ Binary spreadsheets (`.xlsx`, `.xls`, `.ods`) need one extra step — see
 ### Full-screen modal
 
 ```js
-import { openPreview } from 'previewkit';
+import { openPreview } from 'fileon';
 
 // A URL
 openPreview('https://example.com/contract.docx');
@@ -76,13 +76,13 @@ openPreview([fileA, fileB, fileC], { index: 1 });
 ```
 
 ```js
-import 'previewkit'; // registers the elements
+import 'fileon'; // registers the elements
 ```
 
 Or imperatively:
 
 ```js
-import { renderPreview } from 'previewkit';
+import { renderPreview } from 'fileon';
 
 renderPreview('#viewer', myFile, { minHeight: '600px', bordered: true });
 ```
@@ -217,7 +217,7 @@ await el.download();
 Call once at startup.
 
 ```js
-import { configure } from 'previewkit';
+import { configure } from 'fileon';
 
 configure({
   maxBytes: 100 * 1024 * 1024, // refuse to buffer files larger than this
@@ -338,7 +338,7 @@ A browser cannot distinguish a CORS rejection from a dead server — both surfac
 Register your own, or override a built-in by reusing its `id`. Highest score wins.
 
 ```js
-import { registerViewer } from 'previewkit';
+import { registerViewer } from 'fileon';
 
 registerViewer({
   id: 'dicom',
@@ -370,7 +370,7 @@ export default async function dicomViewer({ source, container, signal, setStatus
 
 ```jsx
 import { useEffect, useRef } from 'react';
-import 'previewkit';
+import 'fileon';
 
 export function Preview({ file }) {
   const ref = useRef(null);
@@ -391,7 +391,7 @@ export function Preview({ file }) {
 </template>
 
 <script setup>
-import 'previewkit';
+import 'fileon';
 defineProps({ url: String });
 </script>
 ```

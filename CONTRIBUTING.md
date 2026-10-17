@@ -100,6 +100,6 @@ A file that reproduces the problem is worth more than anything else. If you
 cannot share the file, the output of this is the next best thing:
 
 ```js
-import { describe } from 'previewkit';
+import { describe } from 'fileon';
 console.log(describe({ name: file.name, mime: file.type, size: file.size }));
 ```

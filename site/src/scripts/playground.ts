@@ -22,6 +22,14 @@ const SHEETJS_CDN = 'https://cdn.sheetjs.com/xlsx-0.20.3/package/xlsx.mjs';
  * modern .xlsx need none of this.
  */
 configure({
+  /*
+   * Point pdf.js at the worker Vite emits from node_modules rather than
+   * letting the library fall back to its CDN. This is the exact line the
+   * configuration page tells readers to add, so the site doubles as a test
+   * of that advice.
+   */
+  pdfWorkerSrc: new URL('pdfjs-dist/build/pdf.worker.min.mjs', import.meta.url).href,
+
   loaders: {
     // A bare remote URL is not something the bundler can resolve, so it is
     // fetched at runtime via a dynamic specifier the bundler leaves alone.

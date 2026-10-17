@@ -45,7 +45,7 @@ let singleton: FilePreviewModalElement | null = null;
 
 function modal(): FilePreviewModalElement {
   if (singleton?.isConnected) return singleton;
-  singleton = document.createElement('file-preview-modal') as FilePreviewModalElement;
+  singleton = new FilePreviewModalElement();
   document.body.append(singleton);
   return singleton;
 }
@@ -129,7 +129,7 @@ export function renderPreview(
       ? host
       : host.querySelector<FilePreviewElement>(':scope > file-preview');
   if (!element) {
-    element = document.createElement('file-preview') as FilePreviewElement;
+    element = new FilePreviewElement();
     host.append(element);
   }
 

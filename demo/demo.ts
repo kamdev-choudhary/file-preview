@@ -1,5 +1,5 @@
-import { configure, formatBytes, openPreview } from '../src/index.js';
-import type { ChangeDetail, ErrorDetail, FilePreviewElement, LoadDetail } from '../src/index.js';
+import { configure, formatBytes, openPreview, FilePreviewElement } from '../src/index.js';
+import type { ChangeDetail, ErrorDetail, LoadDetail } from '../src/index.js';
 
 /**
  * Point pdf.js at the worker Vite emits from node_modules, instead of letting

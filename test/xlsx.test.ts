@@ -14,6 +14,7 @@ group('colFromRef', () => {
     expect(colFromRef('BA')).toBe(52);
     expect(colFromRef('A1')).toBe(0);
     expect(colFromRef('BC42')).toBe(2 * 26 + 3 - 1);
+    expect(colFromRef('ab')).toBe(27);
   });
 });
 
@@ -33,6 +34,7 @@ group('formatExcelDate', () => {
 
   it('formats fractional-day serial numbers with time', () => {
     expect(formatExcelDate(45292.5)).toBe('2024-01-01 12:00');
+    expect(formatExcelDate(45292.5005)).toBe('2024-01-01 12:00:43');
   });
 
   it('returns original string if serial produces invalid date', () => {

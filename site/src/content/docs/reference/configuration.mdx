@@ -1,0 +1,79 @@
+---
+title: Configuration
+description: Size limits, pdf.js assets, request headers and legacy spreadsheet support.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Call `configure()` once at startup. Every key is optional and merges over the defaults.
+
+```js
+import { configure } from 'fileon';
+
+configure({
+  maxBytes: 100 * 1024 * 1024,   // refuse to buffer anything larger
+  maxTextBytes: 5 * 1024 * 1024, // truncate text and code past this
+  officeViewer: true,            // allow the "Open in Office viewer" action
+  credentials: 'same-origin',
+  headers: { 'X-Tenant': 'acme' },
+  locale: 'en-GB',
+});
+```
+
+| Option                   | Default            | Purpose                                                   |
+| ------------------------ | ------------------ | --------------------------------------------------------- |
+| `maxBytes`               | `100 MB`           | Hard ceiling on buffered files. Media still streams.       |
+| `maxTextBytes`           | `5 MB`             | Text and code past this is truncated, never silently.      |
+| `officeViewer`           | `true`             | Offer the Microsoft viewer for Office files at public URLs.|
+| `headers`                | —                  | Sent with every remote fetch.                              |
+| `credentials`            | `'same-origin'`    | Fetch credentials mode.                                    |
+| `locale`                 | OS locale          | Number and date formatting in the spreadsheet viewer.      |
+| `pdfWorkerSrc`           | CDN                | Where pdf.js loads its worker from.                        |
+| `pdfCMapUrl`             | CDN                | pdf.js CMap data.                                          |
+| `pdfStandardFontDataUrl` | CDN                | pdf.js standard fonts.                                     |
+| `loaders.xlsx`           | `null`             | A SheetJS loader, for `.xls` and `.ods`.                   |
+
+## pdf.js assets
+
+By default pdf.js pulls its worker and font data from a version-pinned CDN, which needs no
+setup. If you are **offline, self-hosted, or running a strict CSP**, point it at local copies.
+This one line works in Vite, webpack 5 and Rollup:
+
+```js
+configure({
+  pdfWorkerSrc: new URL('pdfjs-dist/build/pdf.worker.min.mjs', import.meta.url).href,
+});
+```
+
+For full offline support, also copy `node_modules/pdfjs-dist/standard_fonts/` and `cmaps/`
+into your public directory and point at them:
+
+```js
+configure({
+  pdfStandardFontDataUrl: '/pdfjs/standard_fonts/',
+  pdfCMapUrl: '/pdfjs/cmaps/',
+});
+```
+
+<Aside type="caution">
+  Without standard font data, PDFs that rely on Helvetica or Times render with blank text. If
+  a PDF looks empty offline, this is almost always why.
+</Aside>
+
+## Legacy spreadsheets
+
+`.xlsx`, `.xlsm`, `.csv` and `.tsv` are parsed natively with no extra dependency. Binary
+`.xls` and OpenDocument `.ods` are different formats, and the library deliberately does not
+depend on SheetJS — its npm build is frozen at 0.18.5 with unfixed advisories. Supply the
+maintained build yourself if you need those formats:
+
+```js
+configure({
+  loaders: {
+    xlsx: () => import('https://cdn.sheetjs.com/xlsx-0.20.3/package/xlsx.mjs'),
+  },
+});
+```
+
+Without a loader, `.xls` and `.ods` get a download card and an `UNSUPPORTED` error whose hint
+explains exactly this.

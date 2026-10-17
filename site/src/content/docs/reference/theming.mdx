@@ -1,0 +1,53 @@
+---
+title: Theming
+description: Custom properties and shadow parts for restyling the viewer.
+---
+
+The element reads ordinary CSS custom properties, so it themes from your stylesheet with no
+API and no configuration call.
+
+```css
+file-preview {
+  --fp-accent: #5b3df5;
+  --fp-radius: 16px;
+  --fp-font: 'Instrument Sans', system-ui, sans-serif;
+  --fp-min-height: 600px;
+}
+```
+
+## Tokens
+
+| Token             | Controls                                    |
+| ----------------- | ------------------------------------------- |
+| `--fp-bg`         | The stage behind the document                |
+| `--fp-bg-sunken`  | Recessed areas: table headers, gutters       |
+| `--fp-bg-raised`  | Raised areas: toolbar, cards                 |
+| `--fp-surface`    | The document surface itself                  |
+| `--fp-border`     | Every hairline                               |
+| `--fp-text`       | Primary text                                 |
+| `--fp-text-dim`   | Secondary text and status lines              |
+| `--fp-accent`     | Focus rings, active controls, links          |
+| `--fp-danger`     | Error states                                 |
+| `--fp-radius`     | Corner radius                                |
+| `--fp-mono`       | Monospace stack for code and data            |
+| `--fp-min-height` | Minimum height of the inline element         |
+
+## Dark mode
+
+Dark mode follows the operating system. Force it either way with the attribute:
+
+```html
+<file-preview src="/report.pdf" theme="dark"></file-preview>
+```
+
+## Shadow parts
+
+For structural changes the tokens cannot reach:
+
+```css
+file-preview::part(toolbar) {
+  border-bottom: 2px solid var(--brand);
+}
+```
+
+Exposed parts: `toolbar`, `stage`, `content`, `controls`, `backdrop`, `shell`.

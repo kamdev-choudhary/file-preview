@@ -14,7 +14,7 @@ import { defineConfig } from 'vite';
  * the source rather than hand-maintained.
  */
 export default defineConfig({
-  // The demo's public/ folder must not be copied into the published package.
+  // The site's public/ folder must not be copied into the published package.
   publicDir: false,
   build: {
     target: 'es2020',

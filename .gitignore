@@ -1,8 +1,9 @@
 node_modules/
 dist/
-dist-demo/
+site/dist/
+site/.astro/
 coverage/
-public/samples/
+site/public/samples/
 .probe/
 *.log
 .DS_Store

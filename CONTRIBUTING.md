@@ -11,8 +11,8 @@ will not run on older versions).
 ```bash
 corepack enable          # one-time: makes the pinned pnpm available
 pnpm install
-pnpm samples             # generate the demo's test fixtures
-pnpm dev                 # demo at localhost:5173
+pnpm samples             # generate the site's test fixtures
+pnpm dev                 # docs site at localhost:4321
 ```
 
 ## The commands that matter
@@ -22,7 +22,7 @@ pnpm dev                 # demo at localhost:5173
 | `pnpm dev`        | Demo site with HMR                             |
 | `pnpm test`       | Unit tests (vitest)                            |
 | `pnpm test:watch` | Same, in watch mode                            |
-| `pnpm typecheck`  | `tsc --noEmit` over src, test and demo         |
+| `pnpm typecheck`  | `tsc --noEmit` over src, test and scripts      |
 | `pnpm lint`       | oxlint                                         |
 | `pnpm format`     | Prettier, writing in place                     |
 | `pnpm build`      | Library build + generated `.d.ts`              |

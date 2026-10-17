@@ -28,5 +28,5 @@
     // would also need the ES2023 lib, which this build target predates.
     "unicorn/no-array-sort": "off"
   },
-  "ignorePatterns": ["dist", "dist-demo", "node_modules", "public"]
+  "ignorePatterns": ["dist", "node_modules", "site/dist", "site/.astro", "site/public"]
 }

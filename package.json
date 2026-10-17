@@ -1,7 +1,7 @@
 {
   "name": "fileon",
   "version": "1.0.2",
-  "description": "Framework-free universal file preview web component. Images, PDF, Office docs, media, code, archives — inline or full-screen modal.",
+  "description": "Framework-free universal file preview web component. Images, PDF, Office docs, media, code, archives \u2014 inline or full-screen modal.",
   "type": "module",
   "license": "MIT",
   "author": "kamdev-choudhary (https://github.com/kamdev-choudhary)",
@@ -43,22 +43,22 @@
     "provenance": true
   },
   "scripts": {
-    "dev": "vite",
+    "dev": "pnpm --filter fileon-site dev",
     "build": "vite build --config vite.lib.config.ts && pnpm run build:types",
-    "build:demo": "vite build",
-    "preview": "vite preview",
+    "preview": "pnpm --filter fileon-site preview",
     "samples": "node scripts/make-samples.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "lint": "oxlint src scripts demo test",
+    "lint": "oxlint src scripts test site/src",
     "format": "prettier --write \"**/*.{js,mjs,ts,json,md,html,css}\"",
     "format:check": "prettier --check \"**/*.{js,mjs,ts,json,md,html,css}\"",
     "typecheck": "tsc --noEmit",
     "size": "node scripts/check-size.mjs",
     "verify": "pnpm run lint && pnpm run format:check && pnpm run typecheck && pnpm run test:coverage && pnpm run build && pnpm run size && publint",
     "prepublishOnly": "pnpm run build",
-    "build:types": "tsc -p tsconfig.build.json"
+    "build:types": "tsc -p tsconfig.build.json",
+    "build:site": "pnpm --filter fileon-site build"
   },
   "keywords": [
     "file-preview",

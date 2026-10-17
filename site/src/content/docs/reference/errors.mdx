@@ -1,0 +1,60 @@
+---
+title: Errors
+description: Ten stable error codes, so you can branch on cause instead of message text.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Every failure arrives as a `PreviewError` carrying a stable `code`. The built-in error panel
+picks its recovery buttons from the same code, so what the reader sees and what your handler
+receives never disagree.
+
+| Code          | Meaning                                                      |
+| ------------- | ------------------------------------------------------------ |
+| `CORS`        | The server did not allow this page to read the file           |
+| `HTTP`        | Non-2xx response; `error.status` holds the code               |
+| `NETWORK`     | The connection failed mid-transfer                            |
+| `TOO_LARGE`   | Larger than `maxBytes`                                        |
+| `PASSWORD`    | Encrypted PDF, workbook or document                           |
+| `DECODE`      | Corrupt, or not the format it claimed to be                   |
+| `UNSUPPORTED` | No viewer matched this type                                   |
+| `DEPENDENCY`  | A parser chunk could not be loaded                            |
+| `EMPTY`       | There was nothing to show                                     |
+| `ABORTED`     | Superseded by another load, or closed                         |
+
+```js
+openPreview(url, {
+  onError: ({ error }) => {
+    if (error.code === 'CORS') showCorsHelp();
+    else track('preview_failed', { code: error.code, status: error.status });
+  },
+});
+```
+
+## Shape
+
+```ts
+class PreviewError extends Error {
+  code: PreviewErrorCode;
+  /** A second line telling the reader what they can do about it. */
+  hint?: string;
+  /** Present when code === 'HTTP'. */
+  status?: number;
+  cause?: unknown;
+}
+```
+
+<Aside title="Why CORS and NETWORK are separate but ambiguous">
+  A browser cannot distinguish a CORS rejection from a dead server — both surface to script as
+  an opaque `TypeError: Failed to fetch`. The library reports that case as `CORS` and says so
+  plainly in the message rather than guessing which one actually happened.
+</Aside>
+
+## Recovery affordances
+
+The error panel chooses buttons from the code, so you usually do not need to build your own:
+
+- `HTTP`, `NETWORK` — retry, and download
+- `CORS` — open in a new tab
+- `UNSUPPORTED`, `DECODE` — download, and the Office viewer where it applies
+- `PASSWORD` — download

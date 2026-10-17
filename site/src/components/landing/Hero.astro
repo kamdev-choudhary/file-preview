@@ -1,6 +1,12 @@
 ---
+import { readFileSync } from 'node:fs';
 import Chip from './Chip.astro';
 import { SAMPLES, extOf } from '../../data/formats';
+
+// Read at build time so the badge never drifts from what is on npm.
+const { version } = JSON.parse(
+  readFileSync(new URL('../../../../package.json', import.meta.url), 'utf8'),
+);
 ---
 
 <section class="fo-hero">
@@ -42,8 +48,14 @@ import { SAMPLES, extOf } from '../../data/formats';
     </div>
   </div>
 
-  <div class="fo-install">
-    <code>npm i fileon</code>
-    <button class="fo-copy" type="button" data-copy="npm i fileon">Copy</button>
+  <div class="fo-install-row">
+    <div class="fo-install">
+      <code>npm i fileon</code>
+      <button class="fo-copy" type="button" data-copy="npm i fileon">Copy</button>
+    </div>
+    <a class="fo-npm" href="https://www.npmjs.com/package/fileon" rel="noopener">
+      Read it on npm
+      <span class="fo-ver">v{version}</span>
+    </a>
   </div>
 </section>

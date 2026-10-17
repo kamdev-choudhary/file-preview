@@ -1,4 +1,4 @@
-name: Demo
+name: Docs site
 
 on:
   push:
@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   deploy:
-    name: Deploy demo to GitHub Pages
+    name: Deploy documentation site to GitHub Pages
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -33,13 +33,13 @@ jobs:
       - name: Generate sample files
         run: pnpm run samples
 
-      - name: Build demo
-        run: pnpm run build:demo
+      - name: Build site
+        run: pnpm run build:site
 
       - uses: actions/configure-pages@v6
 
       - uses: actions/upload-pages-artifact@v5
         with:
-          path: dist-demo
+          path: site/dist
       - id: deploy
         uses: actions/deploy-pages@v5

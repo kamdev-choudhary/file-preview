@@ -1,23 +1,13 @@
 /*
  * Starlight retheme.
  *
- * The palette is a spectrum rather than a single accent, because that is what
- * the library does: it takes a dozen unrelated file formats and gives them one
- * consistent reading surface. Each format category owns a hue, and those hues
- * are the brand — on the format grid, the extension chips and the code
- * highlighting. Electric indigo leads; the rest support it.
+ * Indigo leads, with a jade second. Beyond those, each file category owns a
+ * hue — and because the library's whole job is turning a dozen unrelated
+ * formats into one reading surface, those category hues are the brand: they
+ * colour the format grid, the extension chips and the sample switcher.
  */
 
 :root {
-  --fo-indigo: #5b3df5;
-  --fo-indigo-lift: #7c62ff;
-  --fo-jade: #00a98f;
-  --fo-magenta: #e6367a;
-  --fo-amber: #f59e0b;
-  --fo-azure: #2e7df7;
-  --fo-orchid: #9333ea;
-  --fo-slate: #64748b;
-
   --fo-display: 'Bricolage Grotesque', 'Instrument Sans', system-ui, sans-serif;
   --fo-sans: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --fo-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
@@ -29,85 +19,95 @@
 /* ---- dark, which is Starlight's default ------------------------------- */
 
 :root {
-  --fo-bg: #0b0a14;
-  --fo-surface: #13121f;
-  --fo-raised: #191827;
-  --fo-line: #272437;
-  --fo-ink: #ecebf5;
-  --fo-dim: #a5a2bd;
-  --fo-faint: #74718f;
+  --fo-indigo: #8b7cf0;
+  --fo-indigo-lift: #a394ff;
+  --fo-jade: #2dd4bf;
 
-  --cat-doc: #9b86ff;
-  --cat-sheet: #2ee0bf;
-  --cat-image: #ff6fa3;
-  --cat-media: #fbbf4a;
-  --cat-code: #6fa5ff;
-  --cat-archive: #99a3bb;
-  --cat-font: #c084fc;
+  --fo-bg: #0b0c12;
+  --fo-surface: #14161f;
+  --fo-raised: #1a1d28;
+  --fo-line: #262a39;
+  --fo-line-soft: #1d2029;
+  --fo-ink: #e9ebf3;
+  --fo-dim: #a0a7bd;
+  --fo-faint: #727a92;
 
-  --sl-color-accent-low: #241a4d;
-  --sl-color-accent: var(--fo-indigo);
-  --sl-color-accent-high: #c3b5ff;
+  --cat-doc: #8b7cf0;
+  --cat-sheet: #2dd4bf;
+  --cat-image: #f0709f;
+  --cat-media: #e5953f;
+  --cat-code: #6098ff;
+  --cat-archive: #99a1b8;
+  --cat-font: #b18cff;
+
+  --sl-color-accent-low: #241f4a;
+  --sl-color-accent: #5b4bdb;
+  --sl-color-accent-high: #c0b6ff;
   --sl-color-white: #ffffff;
-  --sl-color-gray-1: #edecf6;
-  --sl-color-gray-2: #c6c4d8;
-  --sl-color-gray-3: #908da8;
-  --sl-color-gray-4: #5d5a75;
-  --sl-color-gray-5: #3b3851;
-  --sl-color-gray-6: #272437;
-  --sl-color-gray-7: #1a1828;
-  --sl-color-black: #0b0a14;
+  --sl-color-gray-1: #e9ebf3;
+  --sl-color-gray-2: #c2c7d6;
+  --sl-color-gray-3: #8b93a8;
+  --sl-color-gray-4: #5a6076;
+  --sl-color-gray-5: #383d4d;
+  --sl-color-gray-6: #262a39;
+  --sl-color-gray-7: #181b24;
+  --sl-color-black: #0b0c12;
 
   --sl-color-bg: var(--fo-bg);
   --sl-color-bg-nav: color-mix(in srgb, var(--fo-bg) 82%, transparent);
   --sl-color-bg-sidebar: var(--fo-bg);
-  --sl-color-bg-inline-code: #221f36;
-  --sl-color-text-accent: #b3a2ff;
-  --sl-color-hairline-light: #2b2840;
-  --sl-color-hairline: #211f33;
-  --sl-color-hairline-shade: #17162450;
+  --sl-color-bg-inline-code: #1f2330;
+  --sl-color-text-accent: #a394ff;
+  --sl-color-hairline-light: #2b3042;
+  --sl-color-hairline: #1f2330;
+  --sl-color-hairline-shade: #16192250;
 }
 
 /* ---- light ------------------------------------------------------------ */
 
 :root[data-theme='light'] {
-  --fo-bg: #fbfaff;
+  --fo-indigo: #5b4bdb;
+  --fo-indigo-lift: #4a3bc4;
+  --fo-jade: #0d9488;
+
+  --fo-bg: #f6f6fb;
   --fo-surface: #ffffff;
-  --fo-raised: #f4f2fd;
-  --fo-line: #e6e3f5;
-  --fo-ink: #141327;
-  --fo-dim: #55527a;
-  --fo-faint: #8b88a8;
+  --fo-raised: #eeeef6;
+  --fo-line: #e2e3ee;
+  --fo-line-soft: #ecedf5;
+  --fo-ink: #15161f;
+  --fo-dim: #565b70;
+  --fo-faint: #868ca2;
 
-  --cat-doc: #5b3df5;
-  --cat-sheet: #00886f;
-  --cat-image: #d12366;
-  --cat-media: #b26206;
-  --cat-code: #1d63d8;
-  --cat-archive: #55607a;
-  --cat-font: #8126d8;
+  --cat-doc: #5b4bdb;
+  --cat-sheet: #0d9488;
+  --cat-image: #c9256b;
+  --cat-media: #c2620a;
+  --cat-code: #2563eb;
+  --cat-archive: #5c6478;
+  --cat-font: #7c3aed;
 
-  --sl-color-accent-low: #e5dfff;
-  --sl-color-accent: var(--fo-indigo);
-  --sl-color-accent-high: #2c1a7a;
-  --sl-color-white: #141327;
-  --sl-color-gray-1: #1f1d34;
-  --sl-color-gray-2: #403d5e;
-  --sl-color-gray-3: #6b6889;
-  --sl-color-gray-4: #918ead;
-  --sl-color-gray-5: #c9c6dd;
-  --sl-color-gray-6: #e6e3f5;
-  --sl-color-gray-7: #f2f0fb;
-  --sl-color-black: #fbfaff;
+  --sl-color-accent-low: #e3e0fb;
+  --sl-color-accent: #5b4bdb;
+  --sl-color-accent-high: #2b2275;
+  --sl-color-white: #15161f;
+  --sl-color-gray-1: #1d1f2a;
+  --sl-color-gray-2: #3e4253;
+  --sl-color-gray-3: #686e82;
+  --sl-color-gray-4: #9196a7;
+  --sl-color-gray-5: #c7cad6;
+  --sl-color-gray-6: #e2e3ee;
+  --sl-color-gray-7: #f1f1f7;
+  --sl-color-black: #f6f6fb;
 
   --sl-color-bg: var(--fo-bg);
   --sl-color-bg-nav: color-mix(in srgb, var(--fo-bg) 82%, transparent);
   --sl-color-bg-sidebar: var(--fo-bg);
-  --sl-color-bg-inline-code: #efecfd;
-  --sl-color-text-accent: #4a2ee0;
-  --sl-color-hairline-light: #e6e3f5;
-  --sl-color-hairline: #edeaf9;
-  --sl-color-hairline-shade: #e6e3f580;
+  --sl-color-bg-inline-code: #edecf8;
+  --sl-color-text-accent: #4a3bc4;
+  --sl-color-hairline-light: #e2e3ee;
+  --sl-color-hairline: #ecedf5;
+  --sl-color-hairline-shade: #e2e3ee80;
 }
 
 /* ---- typography -------------------------------------------------------- */

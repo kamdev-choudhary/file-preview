@@ -1,0 +1,103 @@
+---
+title: Custom viewers
+description: Teach fileon a new format, or take over one of the built-ins.
+---
+
+Register your own viewer for a format the library doesn't know, or override a built-in by
+reusing its `id`. `match` returns a score and the highest non-zero one wins, so you can take
+over a type without forking anything.
+
+```js
+import { registerViewer } from 'fileon';
+
+const unregister = registerViewer({
+  id: 'dicom',
+  label: 'DICOM',
+  match: (source) => (source.ext === 'dcm' ? 1 : 0),
+  load: () => import('./dicom-viewer.js'), // default export is the factory
+});
+```
+
+`registerViewer` returns a function that removes it again, which is what you want in tests and
+in hot-reloaded dev servers.
+
+## The factory
+
+`load()` is a dynamic import so your parser stays out of the entry chunk. Its default export
+receives a context and returns an instance.
+
+```js
+// dicom-viewer.js
+export default async function dicomViewer({ source, container, signal, config, setStatus }) {
+  setStatus('Decoding…');
+
+  const buffer = await source.arrayBuffer({ signal, onProgress: () => {} });
+  if (signal.aborted) throw new DOMException('aborted', 'AbortError');
+
+  const element = renderDicom(buffer);
+  container.append(element);
+  setStatus('');
+
+  return {
+    element,
+    destroy: () => element.remove(),
+    actions: [
+      { id: 'invert', label: 'Invert', run: () => element.classList.toggle('is-inverted') },
+    ],
+  };
+}
+```
+
+### Context
+
+| Field             | Purpose                                                    |
+| ----------------- | ----------------------------------------------------------- |
+| `source`          | The resolved file: `arrayBuffer()`, `text()`, `name`, `ext` |
+| `container`       | Append your DOM here                                        |
+| `signal`          | Aborts when the user navigates away or closes               |
+| `config`          | The live configuration                                      |
+| `setStatus`       | One line of text in the toolbar                             |
+| `setProgress`     | `(loaded, total)` for the progress bar                      |
+| `requestFallback` | Give up and let the next viewer try                         |
+
+### Instance
+
+Everything but `element` is optional. Implement what your format supports and the toolbar
+adapts: `destroy`, `actions`, `pageCount`, `goToPage`, `onPageChange`, `zoomIn`, `zoomOut`,
+`zoomReset`, `onZoomChange`.
+
+## Overriding a built-in
+
+Reuse the id to replace it outright:
+
+```js
+registerViewer({
+  id: 'pdf', // same id as the built-in, so it is replaced
+  label: 'PDF',
+  match: (source) => (source.kind === 'pdf' ? 1 : 0),
+  load: () => import('./my-pdf-viewer.js'),
+});
+```
+
+Or score higher and leave the original registered as a fallback:
+
+```js
+registerViewer({
+  id: 'pdf-annotated',
+  label: 'PDF',
+  match: (source) => (source.ext === 'pdf' && source.url.includes('/annotated/') ? 2 : 0),
+  load: () => import('./annotated-pdf.js'),
+});
+```
+
+## Throwing usefully
+
+Throw a `PreviewError` so the panel can offer the right recovery:
+
+```js
+import { PreviewError } from 'fileon';
+
+throw new PreviewError('DECODE', 'This scan could not be read.', {
+  hint: 'It may be a compressed transfer syntax this build does not support.',
+});
+```

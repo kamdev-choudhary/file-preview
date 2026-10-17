@@ -18,7 +18,9 @@ import { openPreview } from 'fileon';
 openPreview('https://example.com/report.pdf');
 ```
 
-**[Live demo →](https://kamdev-choudhary.github.io/fileon/)**
+**[Documentation and live demo](https://kamdev-choudhary.github.io/fileon/)** ·
+**[npm](https://www.npmjs.com/package/fileon)** ·
+**[Changelog](./CHANGELOG.md)**
 
 ---
 
@@ -456,8 +458,8 @@ Requires Node 20.19+ or 22.12+ and [pnpm](https://pnpm.io).
 ```bash
 corepack enable       # makes the pinned pnpm available
 pnpm install
-pnpm samples          # generate the demo's test fixtures
-pnpm dev              # demo at localhost:5173
+pnpm samples          # generate the site's test fixtures
+pnpm dev              # docs site at localhost:4321
 pnpm verify           # lint, typecheck, test, build, size budget
 ```
 

@@ -1,5 +1,6 @@
 dist
-dist-demo
-public/samples
+site/dist
+site/.astro
+site/public/samples
 pnpm-lock.yaml
 CHANGELOG.md

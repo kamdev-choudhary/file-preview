@@ -1,6 +1,6 @@
 /**
- * Generates test fixtures into public/samples so the demo works offline and the
- * Office viewers can be exercised without hunting for real documents.
+ * Generates test fixtures into site/public/samples so the site works offline
+ * and the Office viewers can be exercised without hunting for real documents.
  *
  * These are synthetic minimum-viable files: valid enough to parse, not
  * representative of what Word or PowerPoint actually emit. Drag a real document
@@ -14,7 +14,7 @@ import { fileURLToPath } from 'node:url';
 import JSZip from 'jszip';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const out = resolve(root, 'public/samples');
+const out = resolve(root, 'site/public/samples');
 mkdirSync(out, { recursive: true });
 
 const write = (name, data) => {
@@ -400,4 +400,4 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 write('sample.png', buildPng());
 
-console.log('\nFixtures written to public/samples');
+console.log('\nFixtures written to site/public/samples');

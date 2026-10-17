@@ -203,6 +203,26 @@ group('attachZoomPan', () => {
     expect(viewport.classList.contains('is-zoomed')).toBe(false);
   });
 
+  /**
+   * The image viewer realigns the content from this callback, which moves it
+   * inside the scroller. If the scroll offsets were written first the browser
+   * would clamp them against the pre-realignment layout, so the transform and
+   * the zoom flag must both be settled by the time listeners run.
+   */
+  it('notifies with the transform and zoom flag already applied', () => {
+    const { viewport, content } = setup();
+    const seen: Array<{ transform: string; zoomed: boolean }> = [];
+    const z = attachZoomPan(viewport, content, {
+      onChange: () =>
+        seen.push({
+          transform: content.style.transform,
+          zoomed: viewport.classList.contains('is-zoomed'),
+        }),
+    });
+    z.setScale(2);
+    expect(seen).toEqual([{ transform: 'scale(2)', zoomed: true }]);
+  });
+
   it('stops responding after destroy', () => {
     const { viewport, content } = setup();
     const onChange = vi.fn();

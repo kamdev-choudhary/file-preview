@@ -4,6 +4,36 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **Images are centred in the viewport.** Two different elements both answered
+  to the `.fp-stage` selector — the element's own mount point, which is
+  absolutely positioned at `inset: 0`, and the image viewer's wrapper. The
+  cascade merged them, so every image was taken out of flow and pinned to the
+  top-left corner where the centring rule could never reach it. The image is
+  now the centred flex item itself, with no wrapper in between.
+- **Oversized video fits the viewport.** `.fp-video` sizes itself with
+  `max-width`/`max-height: 100%`, but its wrapper had no definite height for
+  those percentages to resolve against, so a video larger than the viewer
+  rendered at its intrinsic size and spilled out behind scrollbars. The player
+  now sits directly in the viewport, as the image does.
+- **Audio player is centred** rather than stretched across the top-left; it was
+  caught by the same selector collision.
+- **Zooming scales the fitted image, not the original.** Passing 100% dropped
+  the image's fit constraints, so one 125% step on an image that had been
+  shrunk to fit jumped it to full natural size — several hundred percent for a
+  large photo. Zoom now scales what you can see.
+
+### Changed
+
+- The image stays horizontally centred while zoomed, for as long as it still
+  fits across. Only the axis that genuinely overflows anchors to its start
+  edge, and that axis scales from that edge so panning reaches the whole
+  image. Previously any zoom above 100% threw the image into the corner on
+  both axes at once.
+
 ## [0.2.0] — 2026-10-16
 
 This release renames the package and rewrites the source in TypeScript. The

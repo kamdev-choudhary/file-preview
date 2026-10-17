@@ -146,10 +146,10 @@ export function attachZoomPan(
     scale = clamped;
     content.style.transform = `scale(${scale})`;
     content.style.transformOrigin = '0 0';
-    viewport.scrollLeft = nextLeft;
-    viewport.scrollTop = nextTop;
     viewport.classList.toggle('is-zoomed', scale > 1.001);
     onChange?.(scale);
+    viewport.scrollLeft = nextLeft;
+    viewport.scrollTop = nextTop;
   };
 
   d.listen(

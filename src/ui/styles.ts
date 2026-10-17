@@ -313,12 +313,29 @@ export const css: string = `
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
 }
+/*
+ * Flex, not grid: the content fits itself to the viewport with percentage
+ * maxima, and a flex item resolves those against the flex container's content
+ * box. A grid item would resolve them against its grid area, whose auto row is
+ * content-sized — so a tall image had no height to measure against and spilled
+ * out of the viewport instead of fitting inside it.
+ */
 .fp-viewport--center {
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 16px;
 }
-.fp-viewport--center.is-zoomed { place-items: start; cursor: grab; }
+/*
+ * Anchor to the start edge only on the axis that genuinely overflows. Centred
+ * content wider than its container puts its start edge *before* the scroll
+ * origin, where no amount of scrolling can reach it — but flipping both axes
+ * the moment zoom passes 1 (as this used to) throws a merely-enlarged image
+ * into the corner. The viewer sets these per axis from the measured size.
+ */
+.fp-viewport--center.is-overflow-x { justify-content: flex-start; }
+.fp-viewport--center.is-overflow-y { align-items: flex-start; }
+.fp-viewport--center.is-zoomed { cursor: grab; }
 .fp-viewport--center.is-panning { cursor: grabbing; }
 .fp-viewport--doc { padding: 24px 16px 48px; }
 .fp-viewport--text { padding: 0; background: var(--fp-bg); }
@@ -326,9 +343,15 @@ export const css: string = `
 .fp-viewport--list { padding: 0; background: var(--fp-bg); }
 .fp-viewport--frame { padding: 0; overflow: hidden; }
 
-.fp-stage { display: inline-block; will-change: transform; }
+/*
+ * The image is the zoom/pan target, so it is what carries the transform. It
+ * is deliberately not wrapped in a .fp-stage: that selector is the element's
+ * own mount point above, absolutely positioned at inset 0, and sharing it
+ * leaked those offsets onto the image and pinned it to the top-left corner.
+ */
 .fp-image {
   display: block;
+  will-change: transform;
   max-width: 100%;
   max-height: calc(100vh - var(--fp-toolbar-h) - 64px);
   object-fit: contain;
@@ -336,7 +359,6 @@ export const css: string = `
   -webkit-user-drag: none;
 }
 :host([inline]) .fp-image { max-height: 100%; }
-.fp-viewport--center.is-zoomed .fp-image { max-width: none; max-height: none; }
 
 .fp-frame { width: 100%; height: 100%; border: 0; display: block; background: #fff; }
 
@@ -733,10 +755,15 @@ export const css: string = `
 .fp-font-editable:focus { border-color: var(--fp-accent); }
 
 /* ---------------------------------------------------- audio / video */
-.fp-stage--video { width: 100%; height: 100%; display: grid; place-items: center; }
+/*
+ * Both of these sit directly in the centred flex viewport, with no wrapper.
+ * A wrapper would re-introduce the percentage trap: a video inside an
+ * auto-sized box has no definite height to measure max-height against, so it
+ * rendered at its intrinsic size and spilled out of the viewport.
+ */
 .fp-video { max-width: 100%; max-height: 100%; display: block; border-radius: var(--fp-radius-sm); background: #000; }
-.fp-stage--audio { width: min(520px, 100%); }
 .fp-audio-card {
+  width: min(520px, 100%);
   padding: 26px 24px;
   border: 1px solid var(--fp-border);
   border-radius: var(--fp-radius);

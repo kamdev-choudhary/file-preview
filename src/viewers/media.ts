@@ -88,19 +88,16 @@ export default async function mediaViewer(ctx: ViewerContext): Promise<ViewerIns
     throw new DOMException('aborted', 'AbortError');
   }
 
-  const stage = el(
-    'div',
-    { class: isVideo ? 'fp-stage fp-stage--video' : 'fp-stage fp-stage--audio' },
-    [
-      isVideo
-        ? media
-        : el('div', { class: 'fp-audio-card' }, [
-            el('div', { class: 'fp-audio-title', text: source.name }),
-            media,
-          ]),
-    ],
-  );
-  const viewport = el('div', { class: 'fp-viewport fp-viewport--center' }, [stage]);
+  // The player goes straight into the centred viewport. Wrapping it would
+  // leave its percentage max-width/max-height with no definite box to resolve
+  // against, which is what used to push an oversized video out of view.
+  const content = isVideo
+    ? media
+    : el('div', { class: 'fp-audio-card' }, [
+        el('div', { class: 'fp-audio-title', text: source.name }),
+        media,
+      ]);
+  const viewport = el('div', { class: 'fp-viewport fp-viewport--center' }, [content]);
   container.append(viewport);
 
   const secs = media.duration;

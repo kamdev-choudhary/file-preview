@@ -1,0 +1,67 @@
+---
+title: Quick start
+description: Open the modal, render inline, and drive a gallery from your own interface.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Importing the package registers `<file-preview>` and `<file-preview-modal>`. From there you have
+two entry points: render inline, or open the full-screen modal.
+
+```js
+import { openPreview, renderPreview } from 'fileon';
+
+// Full-screen modal — pass one file, or an array for a gallery.
+openPreview('/quarterly-report.pdf');
+
+// Or render into an element you already have.
+renderPreview('#viewer', fileFromInput, { bordered: true, minHeight: '520px' });
+```
+
+## From a file input
+
+The most common case: let someone pick a file and show it immediately. Nothing is uploaded.
+
+```js
+import { openPreview } from 'fileon';
+
+document.querySelector('#picker').addEventListener('change', (event) => {
+  const files = [...event.target.files];
+  if (files.length) openPreview(files);
+});
+```
+
+## Driving a gallery
+
+`openPreview` returns a handle, so your own buttons can move through the set.
+
+```js
+const gallery = openPreview(files, {
+  index: 0,
+  onLoad: ({ source, viewer }) => console.log(`${source.name} opened in ${viewer}`),
+  onError: ({ error }) => console.warn(error.code, error.message),
+  onChange: ({ index }) => syncMyThumbnails(index),
+  onClose: () => {},
+});
+
+gallery.go(2);
+gallery.close();
+```
+
+## Inline, and swapped later
+
+`renderPreview` returns the element, so you can keep assigning to it rather than re-rendering.
+
+```js
+const viewer = renderPreview('#viewer', '/first.pdf', { bordered: true });
+
+document.querySelector('#next').addEventListener('click', () => {
+  viewer.file = '/second.xlsx';
+});
+```
+
+<Aside>
+  `.file` accepts anything the functions accept — a URL, a `File`, a `Blob`, an `ArrayBuffer`, a
+  data URI or a descriptor object. See [what you can
+  pass](/fileon/reference/functions/#what-you-can-pass).
+</Aside>

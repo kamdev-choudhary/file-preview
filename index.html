@@ -3,92 +3,653 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>fileon — universal file preview web component</title>
+    <title>fileon — preview any file in the browser</title>
+    <meta
+      name="description"
+      content="A framework-free web component that previews PDFs, Office documents, images, media, code and archives in the browser. One custom element, no server, 17 kB."
+    />
     <link
       rel="icon"
       href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='13' font-size='14'>📄</text></svg>"
     />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="./demo/demo.css" />
   </head>
   <body>
-    <header class="hero">
-      <div class="wrap">
-        <h1>fileon</h1>
-        <p class="tagline">
-          One framework-free web component that previews images, PDFs, Office documents, media,
-          code, archives and fonts — from URLs, <code>File</code>s, Blobs or buffers.
-        </p>
-        <div class="hero-actions">
-          <button class="btn btn-primary" id="pick">Choose files…</button>
-          <button class="btn" id="open-gallery">Open sample gallery</button>
-          <button class="btn btn-ghost" id="theme">Toggle theme</button>
+    <a class="skip" href="#try">Skip to the file preview</a>
+
+    <header class="nav" id="nav">
+      <div class="shell nav-inner">
+        <a class="brand" href="#top">
+          <span class="brand-mark" aria-hidden="true">fo</span>
+          <span class="brand-name">fileon</span>
+        </a>
+        <nav class="nav-links" aria-label="Sections">
+          <a href="#try">Try it</a>
+          <a href="#formats">Formats</a>
+          <a href="#docs">Docs</a>
+          <a href="#edges">Edge cases</a>
+        </nav>
+        <div class="nav-end">
+          <a class="nav-out" href="https://www.npmjs.com/package/fileon" rel="noopener">
+            npm
+            <span class="nav-ver" id="nav-version">1.0.2</span>
+          </a>
+          <a class="nav-out" href="https://github.com/kamdev-choudhary/fileon" rel="noopener"
+            >GitHub</a
+          >
+          <button class="icon-btn" id="theme" type="button" aria-label="Switch colour theme">
+            <span class="theme-glyph" aria-hidden="true"></span>
+          </button>
         </div>
-        <p class="hint">…or drop files anywhere on this page.</p>
       </div>
     </header>
 
-    <main class="wrap">
-      <section>
-        <h2>Preview any URL</h2>
-        <p class="section-note">
-          Remote files stream directly where possible. If a server blocks cross-origin reads, the
-          error explains exactly that and offers to open it in a new tab.
-        </p>
-        <form class="urlbar" id="url-form">
-          <input
-            id="url-input"
-            type="url"
-            placeholder="https://example.com/document.pdf"
-            spellcheck="false"
-            autocomplete="off"
-          />
-          <button class="btn btn-primary" type="submit">Preview</button>
-        </form>
+    <main id="top">
+      <!-- ------------------------------------------------------------ hero -->
+      <section class="hero shell" id="try">
+        <div class="hero-copy">
+          <h1>Preview any file,<br />right where it lives.</h1>
+          <p class="lede">
+            One custom element renders PDFs, Word and PowerPoint documents, spreadsheets, images,
+            video, code and archives — in the browser, with no upload and no server. It works in
+            plain HTML and in every framework, because it is only a custom element.
+          </p>
+          <div class="stats">
+            <span><strong>17 kB</strong> entry, gzipped</span>
+            <span><strong>60+</strong> formats</span>
+            <span><strong>0</strong> framework dependencies</span>
+          </div>
+        </div>
+
+        <!-- The product's defining moment is "drop a file, see it render", so
+             that is the hero rather than a picture of one. -->
+        <div class="try">
+          <div class="try-zone" id="try-zone">
+            <input type="file" id="file-input" multiple class="visually-hidden" />
+            <div class="try-face">
+              <p class="try-head">Drop a file to preview it</p>
+              <p class="try-sub">
+                Nothing is uploaded. Everything below runs in this tab, on your file.
+              </p>
+              <button class="btn btn-primary" id="pick" type="button">Choose a file</button>
+            </div>
+          </div>
+          <div class="try-samples">
+            <span class="try-samples-label">or open a sample</span>
+            <div class="chipline" id="hero-samples"></div>
+          </div>
+        </div>
+
+        <div class="install">
+          <code id="install-cmd">npm i fileon</code>
+          <button class="copy" type="button" data-copy="npm i fileon">Copy</button>
+        </div>
       </section>
 
-      <section>
-        <h2>Sample files</h2>
-        <p class="section-note">
-          Click any card to open it full-screen. Each viewer is a separate lazily-loaded chunk —
-          open DevTools&nbsp;→&nbsp;Network to watch them arrive only when needed.
-        </p>
-        <div class="grid" id="samples"></div>
+      <!-- ------------------------------------------------------------ live -->
+      <section class="shell band" id="live">
+        <div class="band-head">
+          <h2>The same component, inline</h2>
+          <p>
+            Embedded in a page instead of a modal. The toolbar changes to match whatever the active
+            viewer supports — page controls for a PDF, sheet tabs for a workbook, zoom for an
+            image. Each viewer is a separate chunk that arrives only when it is first needed.
+          </p>
+        </div>
+        <div class="chipline" id="inline-chips"></div>
+        <file-preview id="inline" bordered style="--fp-min-height: 500px"></file-preview>
       </section>
 
-      <section>
-        <h2>Inline mode</h2>
-        <p class="section-note">
-          The same component embedded in a page instead of a modal. Switch files with the buttons;
-          the toolbar adapts to whatever the active viewer supports.
+      <!-- --------------------------------------------------------- formats -->
+      <section class="shell band" id="formats">
+        <div class="band-head">
+          <h2>What it reads</h2>
+          <p>
+            Type is decided by magic bytes first, extension second, and the server's
+            <code>Content-Type</code> last — so a PNG named <code>.txt</code> still renders as an
+            image. Anything unrecognised gets a download card, never a broken view.
+          </p>
+        </div>
+        <div class="formats" id="formats-grid"></div>
+        <p class="footnote">
+          Fidelity is stated honestly: <em>exact</em> means pixel-accurate,
+          <em>text only</em> means the words and tables survive but the formatting does not. For
+          Office files at a public URL, the toolbar can hand off to the Microsoft viewer for a
+          full-fidelity render.
         </p>
-        <div class="chips" id="inline-chips"></div>
-        <file-preview id="inline" bordered style="--fp-min-height: 460px"></file-preview>
       </section>
 
-      <section>
-        <h2>Error handling</h2>
-        <p class="section-note">
-          Every failure is typed, and the recovery buttons are chosen from the error code. These all
-          fail on purpose.
-        </p>
-        <div class="grid grid-errors" id="errors"></div>
+      <!-- ------------------------------------------------------------ docs -->
+      <section class="docs shell" id="docs">
+        <aside class="toc" aria-label="Documentation contents">
+          <p class="toc-head">Documentation</p>
+          <nav id="toc-nav">
+            <a href="#install">Install</a>
+            <a href="#quickstart">Quick start</a>
+            <a href="#frameworks">Frameworks</a>
+            <a href="#inputs">What you can pass</a>
+            <a href="#element">Element reference</a>
+            <a href="#events">Events</a>
+            <a href="#config">Configuration</a>
+            <a href="#errors">Error handling</a>
+            <a href="#theming">Theming</a>
+            <a href="#custom">Custom viewers</a>
+            <a href="#keyboard">Keyboard</a>
+          </nav>
+          <a class="toc-out" href="https://github.com/kamdev-choudhary/fileon#readme" rel="noopener"
+            >Full README on GitHub</a
+          >
+        </aside>
+
+        <div class="doc-body">
+          <article class="doc" id="install">
+            <h3>Install</h3>
+            <p>The package is ESM-only and ships its own types.</p>
+            <div class="code" data-lang="bash">
+              <button class="copy" type="button">Copy</button>
+              <pre><code class="language-bash">npm i fileon</code></pre>
+            </div>
+            <p>Or use it straight from a CDN with no build step at all:</p>
+            <div class="code" data-lang="html">
+              <button class="copy" type="button">Copy</button>
+              <pre><code class="language-xml">&lt;script type="module" src="https://cdn.jsdelivr.net/npm/fileon/+esm"&gt;&lt;/script&gt;
+
+&lt;file-preview src="/report.pdf" bordered&gt;&lt;/file-preview&gt;</code></pre>
+            </div>
+          </article>
+
+          <article class="doc" id="quickstart">
+            <h3>Quick start</h3>
+            <p>
+              Importing the package registers <code>&lt;file-preview&gt;</code> and
+              <code>&lt;file-preview-modal&gt;</code>. From there you have two entry points: render
+              inline, or open the full-screen modal.
+            </p>
+            <div class="code" data-lang="js">
+              <button class="copy" type="button">Copy</button>
+              <pre><code class="language-javascript">import { openPreview, renderPreview } from 'fileon';
+
+// Full-screen modal — pass one file or an array for a gallery.
+openPreview('/quarterly-report.pdf');
+
+// Or render into an element you already have.
+renderPreview('#viewer', fileFromInput, { bordered: true, minHeight: '520px' });</code></pre>
+            </div>
+            <p>
+              <code>openPreview</code> returns a handle, so a gallery can be driven from your own
+              UI:
+            </p>
+            <div class="code" data-lang="js">
+              <button class="copy" type="button">Copy</button>
+              <pre><code class="language-javascript">const gallery = openPreview(files, {
+  index: 0,
+  onLoad: ({ source, viewer }) =&gt; console.log(`${source.name} opened in ${viewer}`),
+  onError: ({ error }) =&gt; console.warn(error.code, error.message),
+  onClose: () =&gt; {},
+});
+
+gallery.go(2);
+gallery.close();</code></pre>
+            </div>
+          </article>
+
+          <article class="doc" id="frameworks">
+            <h3>Frameworks</h3>
+            <p>
+              A custom element is just a DOM element, so there is no wrapper package to install.
+              The only thing that differs between frameworks is how you set a property that isn't a
+              string.
+            </p>
+            <div class="tabs" id="fw-tabs">
+              <div class="tablist" role="tablist" aria-label="Framework examples">
+                <button role="tab" aria-selected="true" data-tab="html">HTML</button>
+                <button role="tab" aria-selected="false" data-tab="react">React</button>
+                <button role="tab" aria-selected="false" data-tab="vue">Vue</button>
+                <button role="tab" aria-selected="false" data-tab="svelte">Svelte</button>
+                <button role="tab" aria-selected="false" data-tab="angular">Angular</button>
+              </div>
+
+              <div class="tabpanel is-active" data-panel="html" role="tabpanel">
+                <div class="code" data-lang="html">
+                  <button class="copy" type="button">Copy</button>
+                  <pre><code class="language-xml">&lt;script type="module"&gt;
+  import 'fileon';
+&lt;/script&gt;
+
+&lt;file-preview src="/report.pdf" name="Q3 report.pdf" bordered&gt;&lt;/file-preview&gt;</code></pre>
+                </div>
+              </div>
+
+              <div class="tabpanel" data-panel="react" role="tabpanel">
+                <div class="code" data-lang="jsx">
+                  <button class="copy" type="button">Copy</button>
+                  <pre><code class="language-javascript">import { useEffect, useRef } from 'react';
+import 'fileon';
+
+export function Preview({ file }) {
+  const ref = useRef(null);
+
+  // `file` accepts a File, Blob, URL or descriptor — assign it as a
+  // property, because React would stringify it as an attribute.
+  useEffect(() =&gt; {
+    if (ref.current) ref.current.file = file;
+  }, [file]);
+
+  return &lt;file-preview ref={ref} bordered style={{ '--fp-min-height': '520px' }} /&gt;;
+}</code></pre>
+                </div>
+                <p class="doc-aside">
+                  For a click-to-open flow, call <code>openPreview(file)</code> from the handler
+                  instead — there is nothing to mount.
+                </p>
+              </div>
+
+              <div class="tabpanel" data-panel="vue" role="tabpanel">
+                <div class="code" data-lang="vue">
+                  <button class="copy" type="button">Copy</button>
+                  <pre><code class="language-xml">&lt;template&gt;
+  &lt;file-preview :src="url" bordered /&gt;
+&lt;/template&gt;
+
+&lt;script setup&gt;
+import 'fileon';
+defineProps({ url: String });
+&lt;/script&gt;</code></pre>
+                </div>
+                <p class="doc-aside">Tell the compiler these tags are custom elements:</p>
+                <div class="code" data-lang="js">
+                  <button class="copy" type="button">Copy</button>
+                  <pre><code class="language-javascript">// vite.config.js
+vue({
+  template: {
+    compilerOptions: { isCustomElement: (tag) =&gt; tag.startsWith('file-preview') },
+  },
+});</code></pre>
+                </div>
+              </div>
+
+              <div class="tabpanel" data-panel="svelte" role="tabpanel">
+                <div class="code" data-lang="svelte">
+                  <button class="copy" type="button">Copy</button>
+                  <pre><code class="language-xml">&lt;script&gt;
+  import 'fileon';
+  export let file;
+
+  let el;
+  $: if (el) el.file = file;
+&lt;/script&gt;
+
+&lt;file-preview bind:this={el} bordered&gt;&lt;/file-preview&gt;</code></pre>
+                </div>
+              </div>
+
+              <div class="tabpanel" data-panel="angular" role="tabpanel">
+                <div class="code" data-lang="ts">
+                  <button class="copy" type="button">Copy</button>
+                  <pre><code class="language-typescript">import { CUSTOM_ELEMENTS_SCHEMA, Component } from '@angular/core';
+import 'fileon';
+
+@Component({
+  selector: 'app-preview',
+  standalone: true,
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  template: `&lt;file-preview [attr.src]="url" bordered&gt;&lt;/file-preview&gt;`,
+})
+export class PreviewComponent {
+  url = '/report.pdf';
+}</code></pre>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="doc" id="inputs">
+            <h3>What you can pass</h3>
+            <p>
+              Anywhere a file is accepted — <code>openPreview</code>,
+              <code>renderPreview</code> or the <code>.file</code> property — you can pass a URL
+              string, a <code>File</code>, a <code>Blob</code>, an <code>ArrayBuffer</code>, a data
+              URI, or a descriptor object. Arrays become a gallery.
+            </p>
+            <p>
+              Reach for a descriptor when the URL alone doesn't say enough: a signed link with no
+              extension, or an endpoint that needs credentials.
+            </p>
+            <div class="code" data-lang="js">
+              <button class="copy" type="button">Copy</button>
+              <pre><code class="language-javascript">openPreview({
+  url: 'https://api.example.com/files/8fa21c',
+  name: 'Q3 report.xlsx',   // gives the detector an extension to work with
+  type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  headers: { Authorization: `Bearer ${token}` },
+  credentials: 'include',
+});</code></pre>
+            </div>
+          </article>
+
+          <article class="doc" id="element">
+            <h3>Element reference</h3>
+            <div class="code" data-lang="html">
+              <button class="copy" type="button">Copy</button>
+              <pre><code class="language-xml">&lt;file-preview
+  src="/file.pdf"
+  name="Report.pdf"       &lt;!-- overrides the name derived from the URL --&gt;
+  type="application/pdf"  &lt;!-- overrides the server's Content-Type --&gt;
+  theme="dark"            &lt;!-- "light" | "dark"; omit to follow the OS --&gt;
+  toolbar="false"         &lt;!-- hide the toolbar --&gt;
+  download="false"        &lt;!-- hide the download button --&gt;
+  bordered
+&gt;&lt;/file-preview&gt;</code></pre>
+            </div>
+            <div class="code" data-lang="js">
+              <button class="copy" type="button">Copy</button>
+              <pre><code class="language-javascript">const el = document.querySelector('file-preview');
+
+el.file = someBlob;   // assign any accepted input
+el.source;            // the resolved Source, once loaded
+el.reload();
+el.clear();
+await el.download();</code></pre>
+            </div>
+          </article>
+
+          <article class="doc" id="events">
+            <h3>Events</h3>
+            <p>All of them bubble and cross the shadow boundary.</p>
+            <div class="table-wrap">
+              <table class="ref">
+                <thead>
+                  <tr>
+                    <th>Event</th>
+                    <th><code>detail</code></th>
+                    <th>Fires when</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>fp-load</code></td>
+                    <td><code>{ source, viewer }</code></td>
+                    <td>A viewer finished rendering</td>
+                  </tr>
+                  <tr>
+                    <td><code>fp-error</code></td>
+                    <td><code>{ source, error }</code></td>
+                    <td>A load or decode failed</td>
+                  </tr>
+                  <tr>
+                    <td><code>fp-change</code></td>
+                    <td><code>{ index, source }</code></td>
+                    <td>The gallery moved to another file</td>
+                  </tr>
+                  <tr>
+                    <td><code>fp-close</code></td>
+                    <td>—</td>
+                    <td>The modal closed</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+
+          <article class="doc" id="config">
+            <h3>Configuration</h3>
+            <p>Call <code>configure()</code> once at startup. Every key is optional.</p>
+            <div class="code" data-lang="js">
+              <button class="copy" type="button">Copy</button>
+              <pre><code class="language-javascript">import { configure } from 'fileon';
+
+configure({
+  maxBytes: 100 * 1024 * 1024,   // refuse to buffer anything larger
+  maxTextBytes: 5 * 1024 * 1024, // truncate text and code past this
+  officeViewer: true,            // allow the "Open in Office viewer" action
+  credentials: 'same-origin',
+  headers: { 'X-Tenant': 'acme' },
+  locale: 'en-GB',
+});</code></pre>
+            </div>
+            <h4>pdf.js assets</h4>
+            <p>
+              pdf.js pulls its worker and font data from a version-pinned CDN by default, which
+              needs no setup. If you are offline, self-hosted, or run a strict CSP, point it at
+              local copies instead. This one line works in Vite, webpack 5 and Rollup.
+            </p>
+            <div class="code" data-lang="js">
+              <button class="copy" type="button">Copy</button>
+              <pre><code class="language-javascript">configure({
+  pdfWorkerSrc: new URL('pdfjs-dist/build/pdf.worker.min.mjs', import.meta.url).href,
+});</code></pre>
+            </div>
+            <h4>Legacy spreadsheets</h4>
+            <p>
+              <code>.xlsx</code>, <code>.xlsm</code>, <code>.csv</code> and <code>.tsv</code> are
+              parsed natively with no extra dependency. Binary <code>.xls</code> and
+              <code>.ods</code> are a different format; supply SheetJS if you need them.
+            </p>
+            <div class="code" data-lang="js">
+              <button class="copy" type="button">Copy</button>
+              <pre><code class="language-javascript">configure({
+  loaders: { xlsx: () =&gt; import('https://cdn.sheetjs.com/xlsx-0.20.3/package/xlsx.mjs') },
+});</code></pre>
+            </div>
+          </article>
+
+          <article class="doc" id="errors">
+            <h3>Error handling</h3>
+            <p>
+              Every failure arrives as a <code>PreviewError</code> with a stable
+              <code>code</code>, so you can branch on the cause instead of matching on message
+              text. The built-in error panel already picks its recovery buttons from the same code.
+            </p>
+            <div class="table-wrap">
+              <table class="ref">
+                <thead>
+                  <tr>
+                    <th>Code</th>
+                    <th>Meaning</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>CORS</code></td>
+                    <td>The server did not allow this page to read the file</td>
+                  </tr>
+                  <tr>
+                    <td><code>HTTP</code></td>
+                    <td>Non-2xx response; <code>error.status</code> has the code</td>
+                  </tr>
+                  <tr>
+                    <td><code>NETWORK</code></td>
+                    <td>The connection failed mid-transfer</td>
+                  </tr>
+                  <tr>
+                    <td><code>TOO_LARGE</code></td>
+                    <td>Larger than <code>maxBytes</code></td>
+                  </tr>
+                  <tr>
+                    <td><code>PASSWORD</code></td>
+                    <td>Encrypted PDF, workbook or document</td>
+                  </tr>
+                  <tr>
+                    <td><code>DECODE</code></td>
+                    <td>Corrupt, or not the format it claimed to be</td>
+                  </tr>
+                  <tr>
+                    <td><code>UNSUPPORTED</code></td>
+                    <td>No viewer matched this type</td>
+                  </tr>
+                  <tr>
+                    <td><code>DEPENDENCY</code></td>
+                    <td>A parser chunk could not be loaded</td>
+                  </tr>
+                  <tr>
+                    <td><code>EMPTY</code></td>
+                    <td>There was nothing to show</td>
+                  </tr>
+                  <tr>
+                    <td><code>ABORTED</code></td>
+                    <td>Superseded by another load, or closed</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="code" data-lang="js">
+              <button class="copy" type="button">Copy</button>
+              <pre><code class="language-javascript">openPreview(url, {
+  onError: ({ error }) =&gt; {
+    if (error.code === 'CORS') showCorsHelp();
+    else track('preview_failed', { code: error.code });
+  },
+});</code></pre>
+            </div>
+            <p class="doc-aside">
+              A browser cannot tell a CORS rejection from a dead server — both surface as an opaque
+              <code>TypeError</code>. The <code>CORS</code> message says so plainly rather than
+              guessing which one happened.
+            </p>
+          </article>
+
+          <article class="doc" id="theming">
+            <h3>Theming</h3>
+            <p>
+              The element reads ordinary custom properties, so it themes from your stylesheet with
+              no API.
+            </p>
+            <div class="code" data-lang="css">
+              <button class="copy" type="button">Copy</button>
+              <pre><code class="language-css">file-preview {
+  --fp-accent: #5b4bdb;
+  --fp-radius: 16px;
+  --fp-font: 'Instrument Sans', system-ui, sans-serif;
+  --fp-min-height: 600px;
+}</code></pre>
+            </div>
+            <p>
+              Also available: <code>--fp-bg</code>, <code>--fp-bg-sunken</code>,
+              <code>--fp-bg-raised</code>, <code>--fp-surface</code>, <code>--fp-border</code>,
+              <code>--fp-text</code>, <code>--fp-text-dim</code>, <code>--fp-danger</code> and
+              <code>--fp-mono</code>. Dark mode follows the OS unless you set
+              <code>theme</code>. For structural changes, these shadow parts are exposed:
+              <code>toolbar</code>, <code>stage</code>, <code>content</code>,
+              <code>controls</code>, <code>backdrop</code> and <code>shell</code>.
+            </p>
+          </article>
+
+          <article class="doc" id="custom">
+            <h3>Custom viewers</h3>
+            <p>
+              Register your own for a format the library doesn't know, or override a built-in by
+              reusing its <code>id</code>. <code>match</code> returns a score and the highest one
+              wins, so you can take over a type without forking anything.
+            </p>
+            <div class="code" data-lang="js">
+              <button class="copy" type="button">Copy</button>
+              <pre><code class="language-javascript">import { registerViewer } from 'fileon';
+
+registerViewer({
+  id: 'dicom',
+  label: 'DICOM',
+  match: (source) =&gt; (source.ext === 'dcm' ? 1 : 0),
+  load: () =&gt; import('./dicom-viewer.js'), // default export is the factory
+});</code></pre>
+            </div>
+            <div class="code" data-lang="js">
+              <button class="copy" type="button">Copy</button>
+              <pre><code class="language-javascript">// dicom-viewer.js
+export default async function dicomViewer({ source, container, signal, setStatus }) {
+  setStatus('Decoding…');
+  const buffer = await source.arrayBuffer({ signal });
+  const element = renderDicom(buffer);
+  container.append(element);
+
+  return {
+    element,
+    destroy: () =&gt; element.remove(),
+    actions: [{ id: 'invert', label: 'Invert', run: () =&gt; element.classList.toggle('inverted') }],
+  };
+}</code></pre>
+            </div>
+          </article>
+
+          <article class="doc" id="keyboard">
+            <h3>Keyboard</h3>
+            <div class="table-wrap">
+              <table class="ref">
+                <tbody>
+                  <tr>
+                    <td><kbd>Esc</kbd></td>
+                    <td>Close the modal</td>
+                  </tr>
+                  <tr>
+                    <td><kbd>←</kbd> <kbd>→</kbd></td>
+                    <td>Previous and next file in a gallery</td>
+                  </tr>
+                  <tr>
+                    <td><kbd>Tab</kbd></td>
+                    <td>Cycles inside the modal; focus is restored on close</td>
+                  </tr>
+                  <tr>
+                    <td><kbd>Ctrl</kbd> / <kbd>⌘</kbd> + scroll</td>
+                    <td>Zoom images and PDFs</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+        </div>
       </section>
 
-      <section>
-        <h2>Event log</h2>
-        <p class="section-note">
-          <code>fp-load</code>, <code>fp-error</code> and <code>fp-change</code> events, as they
-          fire.
-        </p>
-        <pre class="log" id="log">Waiting for events…</pre>
+      <!-- ------------------------------------------------------- edge cases -->
+      <section class="shell band" id="edges">
+        <div class="band-head">
+          <h2>When things go wrong</h2>
+          <p>
+            A preview component spends a lot of its life handling files that are missing, corrupt,
+            blocked or mislabelled. These all fail on purpose — open them and watch what the user
+            is told, and what the event log records.
+          </p>
+        </div>
+        <div class="edge-layout">
+          <div class="edge-grid" id="errors"></div>
+          <div class="logwrap">
+            <div class="log-head">
+              <span>Event log</span>
+              <button class="copy ghost" type="button" id="log-clear">Clear</button>
+            </div>
+            <pre class="log" id="log">Waiting for events…</pre>
+          </div>
+        </div>
       </section>
     </main>
 
+    <footer class="footer">
+      <div class="shell footer-inner">
+        <div>
+          <p class="footer-brand">fileon</p>
+          <p class="footer-note">
+            Framework-free file preview for the web. MIT licensed. Built by
+            <a href="https://github.com/kamdev-choudhary" rel="noopener">kamdev-choudhary</a>.
+          </p>
+        </div>
+        <nav class="footer-links" aria-label="Project links">
+          <a href="https://www.npmjs.com/package/fileon" rel="noopener">npm package</a>
+          <a href="https://github.com/kamdev-choudhary/fileon" rel="noopener">Source on GitHub</a>
+          <a href="https://github.com/kamdev-choudhary/fileon#readme" rel="noopener">README</a>
+          <a href="https://github.com/kamdev-choudhary/fileon/blob/main/CHANGELOG.md" rel="noopener"
+            >Changelog</a
+          >
+          <a href="https://github.com/kamdev-choudhary/fileon/issues" rel="noopener">Report a bug</a>
+        </nav>
+      </div>
+    </footer>
+
     <div class="dropzone" id="dropzone"><div class="dropzone-inner">Drop to preview</div></div>
 
-    <!-- Visually hidden rather than `hidden`: some browsers refuse to open the
-         file dialog for a programmatic .click() on a display:none input. -->
-    <input type="file" id="file-input" multiple class="visually-hidden" />
     <script type="module" src="./demo/demo.ts"></script>
   </body>
 </html>

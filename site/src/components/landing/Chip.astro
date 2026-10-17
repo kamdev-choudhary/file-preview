@@ -1,0 +1,22 @@
+---
+interface Props {
+  ext: string;
+  label: string;
+  cat: string;
+  file?: string;
+  index?: number;
+  active?: boolean;
+}
+const { ext, label, cat, file, index, active = false } = Astro.props;
+---
+
+<button
+  type="button"
+  class:list={['fo-chip', { 'is-active': active }]}
+  data-cat={cat}
+  data-file={file}
+  data-index={index}
+>
+  <span class="fo-chip-ext">{ext}</span>
+  <span>{label}</span>
+</button>

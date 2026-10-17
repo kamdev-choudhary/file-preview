@@ -1,0 +1,561 @@
+/*
+ * Landing page.
+ *
+ * One repeated device carries the page: the extension chip — a monospace tile
+ * tinted by file category. The hero's colour comes from a mesh of those same
+ * category hues, so the palette is literally made of the formats the library
+ * reads rather than applied on top of them.
+ */
+
+/* The splash page needs more room than Starlight's prose column. */
+.content-panel:has(.fo-landing) .sl-container,
+.sl-container:has(> .fo-landing) {
+  max-width: 78rem;
+}
+.sl-markdown-content .fo-landing h2 {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+.fo-landing {
+  --fo-r: 14px;
+}
+.fo-landing :where(h1, h2) {
+  font-family: var(--fo-display);
+  letter-spacing: -0.035em;
+  line-height: 1.02;
+}
+
+/* ------------------------------------------------------------------ hero */
+
+.fo-hero {
+  padding: clamp(8px, 2vw, 24px) 0 0;
+}
+.fo-hero h1 {
+  font-size: clamp(2.6rem, 6.6vw, 4.6rem);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  margin: 0 0 22px;
+}
+.fo-lede {
+  margin: 0;
+  max-width: 56ch;
+  font-size: clamp(1.03rem, 1.5vw, 1.19rem);
+  color: var(--fo-dim);
+  line-height: 1.6;
+}
+.fo-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 28px;
+  margin-top: 26px;
+  font-size: 0.9rem;
+  color: var(--fo-faint);
+}
+.fo-stats strong {
+  font-family: var(--fo-mono);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--fo-ink);
+}
+
+/* The drop target is the hero image, lit by a mesh of the category hues. */
+.fo-try {
+  margin-top: 40px;
+}
+.fo-zone {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: clamp(40px, 7vw, 76px) 28px;
+  text-align: center;
+  cursor: pointer;
+  border: 2px dashed var(--fo-line);
+  border-radius: 22px;
+  background: var(--fo-surface);
+  transition:
+    border-color 0.18s,
+    transform 0.18s;
+}
+.fo-zone::before {
+  content: '';
+  position: absolute;
+  inset: -40%;
+  z-index: -1;
+  background:
+    radial-gradient(
+      closest-side circle at 22% 28%,
+      color-mix(in srgb, var(--cat-doc) 46%, transparent),
+      transparent
+    ),
+    radial-gradient(
+      closest-side circle at 76% 22%,
+      color-mix(in srgb, var(--cat-image) 38%, transparent),
+      transparent
+    ),
+    radial-gradient(
+      closest-side circle at 62% 82%,
+      color-mix(in srgb, var(--cat-sheet) 40%, transparent),
+      transparent
+    ),
+    radial-gradient(
+      closest-side circle at 14% 84%,
+      color-mix(in srgb, var(--cat-media) 32%, transparent),
+      transparent
+    );
+  filter: blur(38px);
+  opacity: 0.5;
+  transition: opacity 0.25s;
+}
+.fo-zone:hover {
+  border-color: color-mix(in srgb, var(--fo-indigo) 55%, var(--fo-line));
+}
+.fo-zone:hover::before {
+  opacity: 0.72;
+}
+.fo-zone.is-over {
+  border-style: solid;
+  border-color: var(--fo-indigo);
+  transform: scale(1.006);
+}
+.fo-zone.is-over::before {
+  opacity: 0.95;
+}
+.fo-zone-head {
+  margin: 0;
+  font-family: var(--fo-display);
+  font-size: clamp(1.3rem, 2.8vw, 1.75rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--fo-ink);
+}
+.fo-zone-sub {
+  margin: 10px auto 24px;
+  max-width: 44ch;
+  color: var(--fo-dim);
+  font-size: 0.95rem;
+}
+
+.fo-try-samples {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  margin-top: 20px;
+}
+.fo-try-label {
+  font-size: 0.875rem;
+  color: var(--fo-faint);
+}
+
+.fo-install {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 30px;
+  padding: 7px 7px 7px 18px;
+  border: 1px solid var(--fo-line);
+  border-radius: 999px;
+  background: var(--fo-surface);
+}
+.fo-install code {
+  font-family: var(--fo-mono);
+  font-size: 0.9rem;
+  color: var(--fo-ink);
+}
+
+/* --------------------------------------------------------------- buttons */
+
+.fo-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  padding: 0 24px;
+  border: 1px solid var(--fo-line);
+  border-radius: 999px;
+  background: var(--fo-surface);
+  color: var(--fo-ink);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s;
+}
+.fo-btn-primary {
+  background: var(--fo-indigo);
+  border-color: var(--fo-indigo);
+  color: #fff;
+}
+.fo-btn-primary:hover {
+  background: var(--fo-indigo-lift);
+  border-color: var(--fo-indigo-lift);
+}
+
+.fo-copy {
+  height: 32px;
+  padding: 0 14px;
+  border: 1px solid var(--fo-line);
+  border-radius: 999px;
+  background: var(--fo-surface);
+  color: var(--fo-dim);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
+}
+.fo-copy:hover {
+  color: var(--fo-ink);
+  border-color: var(--fo-faint);
+}
+.fo-copy.is-done {
+  color: var(--fo-jade);
+  border-color: color-mix(in srgb, var(--fo-jade) 55%, var(--fo-line));
+}
+.fo-ghost {
+  border-color: transparent;
+  background: transparent;
+}
+
+/* ----------------------------------------------------------- chip system */
+
+.fo-chipline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.fo-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 5px 14px 5px 6px;
+  border: 1px solid color-mix(in srgb, var(--c, var(--fo-indigo)) 30%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--c, var(--fo-indigo)) 10%, var(--fo-surface));
+  color: var(--fo-ink);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s;
+}
+.fo-chip:hover {
+  background: color-mix(in srgb, var(--c, var(--fo-indigo)) 20%, var(--fo-surface));
+  border-color: color-mix(in srgb, var(--c, var(--fo-indigo)) 55%, transparent);
+}
+.fo-chip.is-active {
+  background: color-mix(in srgb, var(--c, var(--fo-indigo)) 24%, var(--fo-surface));
+  border-color: var(--c, var(--fo-indigo));
+}
+.fo-chip-ext {
+  display: inline-grid;
+  place-items: center;
+  min-width: 38px;
+  height: 23px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--c, var(--fo-indigo));
+  color: #fff;
+  font-family: var(--fo-mono);
+  font-size: 0.665rem;
+  font-weight: 700;
+}
+
+[data-cat='doc'] {
+  --c: var(--cat-doc);
+}
+[data-cat='sheet'] {
+  --c: var(--cat-sheet);
+}
+[data-cat='image'] {
+  --c: var(--cat-image);
+}
+[data-cat='media'] {
+  --c: var(--cat-media);
+}
+[data-cat='code'] {
+  --c: var(--cat-code);
+}
+[data-cat='archive'] {
+  --c: var(--cat-archive);
+}
+[data-cat='font'] {
+  --c: var(--cat-font);
+}
+
+/* ----------------------------------------------------------------- bands */
+
+.fo-band {
+  margin-top: clamp(64px, 8vw, 104px);
+}
+.fo-band-head {
+  margin-bottom: 26px;
+}
+.fo-band-head h2 {
+  font-size: clamp(1.8rem, 3.4vw, 2.5rem);
+  font-weight: 700;
+  margin: 0 0 12px;
+}
+.fo-band-head p {
+  margin: 0;
+  max-width: 70ch;
+  color: var(--fo-dim);
+}
+.fo-footnote {
+  margin: 24px 0 0;
+  max-width: 76ch;
+  font-size: 0.89rem;
+  color: var(--fo-faint);
+}
+.fo-footnote em {
+  font-style: normal;
+  font-weight: 600;
+  color: var(--fo-dim);
+}
+
+.fo-landing file-preview#inline {
+  display: block;
+  margin-top: 18px;
+  border-radius: var(--fo-r);
+  overflow: hidden;
+}
+
+/* -------------------------------------------------------- format listing */
+
+.fo-formats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(272px, 1fr));
+  gap: 14px;
+}
+.fo-fmt {
+  padding: 18px 18px 16px;
+  border: 1px solid var(--fo-line);
+  border-left: 3px solid var(--c, var(--fo-indigo));
+  border-radius: 0 var(--fo-r) var(--fo-r) 0;
+  background: var(--fo-surface);
+}
+.fo-fmt-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.fo-fmt-name {
+  font-family: var(--fo-display);
+  font-size: 1.06rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+.fo-fmt-fidelity {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--c, var(--fo-indigo));
+  white-space: nowrap;
+}
+.fo-fmt-exts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 12px;
+}
+.fo-ext {
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--c, var(--fo-indigo)) 15%, transparent);
+  color: var(--c, var(--fo-indigo));
+  font-family: var(--fo-mono);
+  font-size: 0.715rem;
+  font-weight: 500;
+}
+.fo-fmt-engine {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--fo-faint);
+}
+
+/* ------------------------------------------------------------ edge cases */
+
+.fo-edge-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+.fo-edge-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(214px, 1fr));
+  gap: 10px;
+}
+.fo-edge {
+  padding: 14px 16px;
+  border: 1px dashed var(--fo-line);
+  border-radius: var(--fo-r);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background-color 0.15s;
+}
+.fo-edge:hover {
+  border-color: var(--fo-indigo);
+  background: color-mix(in srgb, var(--fo-indigo) 8%, transparent);
+}
+.fo-edge-title {
+  display: block;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+.fo-edge-note {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--fo-faint);
+}
+
+.fo-logwrap {
+  border: 1px solid var(--fo-line);
+  border-radius: var(--fo-r);
+  background: var(--fo-surface);
+  overflow: hidden;
+}
+.fo-log-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px 8px 16px;
+  border-bottom: 1px solid var(--fo-line);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--fo-dim);
+}
+.fo-log {
+  margin: 0;
+  padding: 14px 16px;
+  height: 326px;
+  overflow: auto;
+  background: transparent;
+  color: var(--fo-dim);
+  font-family: var(--fo-mono);
+  font-size: 0.75rem;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.fo-log b {
+  color: var(--cat-doc);
+  font-weight: 700;
+}
+.fo-log i {
+  color: var(--cat-image);
+  font-style: normal;
+  font-weight: 700;
+}
+
+/* ------------------------------------------------------------ next steps */
+
+.fo-next {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(258px, 1fr));
+  gap: 12px;
+}
+.fo-next-card {
+  display: block;
+  padding: 18px 20px;
+  border: 1px solid var(--fo-line);
+  border-radius: var(--fo-r);
+  background: var(--fo-surface);
+  text-decoration: none;
+  transition:
+    border-color 0.15s,
+    background-color 0.15s;
+}
+.fo-next-card:hover {
+  border-color: var(--c, var(--fo-indigo));
+  background: color-mix(in srgb, var(--c, var(--fo-indigo)) 7%, var(--fo-surface));
+}
+.fo-next-title {
+  display: block;
+  margin-bottom: 4px;
+  font-family: var(--fo-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: var(--c, var(--fo-indigo));
+}
+.fo-next-note {
+  display: block;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--fo-dim);
+}
+
+/* -------------------------------------------------------------- dropzone */
+
+.fo-dropzone {
+  position: fixed;
+  inset: 0;
+  z-index: 8000;
+  display: none;
+  place-items: center;
+  padding: 22px;
+  background: color-mix(in srgb, var(--fo-indigo) 20%, transparent);
+  backdrop-filter: blur(5px);
+  pointer-events: none;
+}
+.fo-dropzone.is-active {
+  display: grid;
+}
+.fo-dropzone-inner {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border: 2.5px dashed var(--fo-indigo);
+  border-radius: 24px;
+  background: color-mix(in srgb, var(--fo-bg) 84%, transparent);
+  color: var(--fo-ink);
+  font-family: var(--fo-display);
+  font-size: clamp(1.4rem, 4vw, 2.2rem);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+}
+
+.fo-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ------------------------------------------------------------ responsive */
+
+@media (max-width: 950px) {
+  .fo-edge-layout {
+    grid-template-columns: 1fr;
+  }
+  .fo-log {
+    height: 240px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fo-zone,
+  .fo-zone::before {
+    transition: none;
+  }
+}

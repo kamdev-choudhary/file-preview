@@ -1,0 +1,39 @@
+---
+import { FORMATS } from '../../data/formats';
+---
+
+<section class="fo-band" id="formats">
+  <div class="fo-band-head">
+    <h2>What it reads</h2>
+    <p>
+      Type is decided by magic bytes first, extension second, and the server's
+      <code>Content-Type</code> last — so a PNG named <code>.txt</code> still renders as an image.
+      Anything unrecognised gets a download card, never a broken view.
+    </p>
+  </div>
+
+  <div class="fo-formats">
+    {
+      FORMATS.map((row) => (
+        <article class="fo-fmt" data-cat={row.cat}>
+          <div class="fo-fmt-top">
+            <span class="fo-fmt-name">{row.name}</span>
+            <span class="fo-fmt-fidelity">{row.fidelity}</span>
+          </div>
+          <div class="fo-fmt-exts">
+            {row.exts.map((ext) => (
+              <span class="fo-ext">{ext}</span>
+            ))}
+          </div>
+          <p class="fo-fmt-engine">{row.engine}</p>
+        </article>
+      ))
+    }
+  </div>
+
+  <p class="fo-footnote">
+    Fidelity is stated plainly: <em>exact</em> means pixel-accurate, <em>text only</em> means the
+    words and tables survive but the formatting does not. For Office files at a public URL, the
+    toolbar can hand off to the Microsoft viewer for a full-fidelity render.
+  </p>
+</section>

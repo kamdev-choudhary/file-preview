@@ -1,0 +1,129 @@
+---
+title: Frameworks
+description: Using fileon from React, Vue, Svelte, Angular or plain HTML.
+---
+
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+A custom element is just a DOM element, so there is no wrapper package to install and nothing
+to keep in step with your framework's release cycle. The only thing that differs between
+frameworks is how you set a property that isn't a string.
+
+<Aside type="tip" title="Often you need none of this">
+  `openPreview(file)` works from any event handler, in any framework. If you only need
+  click-to-open, call it and skip the markup entirely.
+</Aside>
+
+<Tabs syncKey="fw">
+<TabItem label="HTML">
+
+```html
+<script type="module">
+  import 'fileon';
+</script>
+
+<file-preview src="/report.pdf" name="Q3 report.pdf" bordered></file-preview>
+```
+
+</TabItem>
+<TabItem label="React">
+
+```jsx
+import { useEffect, useRef } from 'react';
+import 'fileon';
+
+export function Preview({ file }) {
+  const ref = useRef(null);
+
+  // Assign as a property: React would stringify a File into an attribute.
+  useEffect(() => {
+    if (ref.current) ref.current.file = file;
+  }, [file]);
+
+  return <file-preview ref={ref} bordered style={{ '--fp-min-height': '520px' }} />;
+}
+```
+
+A plain URL can go straight on as an attribute, with no effect needed:
+
+```jsx
+<file-preview src={url} bordered />
+```
+
+</TabItem>
+<TabItem label="Vue">
+
+```vue
+<template>
+  <file-preview :src="url" bordered />
+</template>
+
+<script setup>
+import 'fileon';
+defineProps({ url: String });
+</script>
+```
+
+Tell the compiler these tags are custom elements, or it will warn on every render:
+
+```js
+// vite.config.js
+vue({
+  template: {
+    compilerOptions: { isCustomElement: (tag) => tag.startsWith('file-preview') },
+  },
+});
+```
+
+</TabItem>
+<TabItem label="Svelte">
+
+```svelte
+<script>
+  import 'fileon';
+  export let file;
+
+  let el;
+  $: if (el) el.file = file;
+</script>
+
+<file-preview bind:this={el} bordered></file-preview>
+```
+
+</TabItem>
+<TabItem label="Angular">
+
+```ts
+import { CUSTOM_ELEMENTS_SCHEMA, Component } from '@angular/core';
+import 'fileon';
+
+@Component({
+  selector: 'app-preview',
+  standalone: true,
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  template: `<file-preview [attr.src]="url" bordered></file-preview>`,
+})
+export class PreviewComponent {
+  url = '/report.pdf';
+}
+```
+
+</TabItem>
+</Tabs>
+
+## Server-side rendering
+
+The package touches `document` at import time to register the elements, so import it in a
+client-only path: a `useEffect`, an `onMount`, a dynamic `import()`, or Astro's
+`client:only`. The markup itself is inert until the definition arrives, so the page will not
+flash broken content.
+
+```jsx
+// Next.js app router
+'use client';
+import { useEffect } from 'react';
+
+useEffect(() => {
+  import('fileon');
+}, []);
+```

@@ -1,0 +1,61 @@
+---
+title: Supported formats
+description: Every format fileon reads, which engine handles it, and how close the preview is to the original.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Type is decided by **magic bytes first**, extension second, and the server's `Content-Type`
+last. A PNG named `.txt` still renders as an image, and a `Content-Type` of
+`application/octet-stream` never overrides a filename that says more.
+
+| Category        | Formats                                          | Engine                      | Fidelity        |
+| --------------- | ------------------------------------------------ | --------------------------- | --------------- |
+| Images          | png, jpg, gif, webp, avif, svg, bmp, ico, tiff¹  | Native                      | exact           |
+| PDF             | pdf                                              | pdf.js                      | exact           |
+| Word            | docx, docm                                       | mammoth                     | approximate     |
+| Legacy Word     | doc                                              | Built-in OLE2 reader        | text only       |
+| PowerPoint      | pptx, pptm                                       | Built-in OOXML reader       | content only    |
+| Spreadsheets    | xlsx, xlsm                                       | Built-in OpenXML parser     | values          |
+| Legacy sheets   | xls, ods                                         | SheetJS _(you supply it)_   | values          |
+| Delimited       | csv, tsv                                         | Built-in RFC 4180 parser    | exact           |
+| Markdown        | md, markdown, mdx                                | marked + DOMPurify          | rendered        |
+| Code            | 50+ extensions                                   | highlight.js                | highlighted     |
+| Structured data | json, jsonl, geojson                             | Built-in                    | pretty-printed  |
+| Video           | mp4, webm, mov, ogv²                             | Native                      | exact, streamed |
+| Audio           | mp3, wav, ogg, m4a, flac, opus                   | Native                      | exact, streamed |
+| Archives        | zip, jar                                         | JSZip                       | file listing    |
+| Fonts           | woff, woff2, ttf, otf                            | FontFace                    | live specimen   |
+
+¹ TIFF and HEIC depend on the browser; Safari handles both, Chrome does not.
+² `.mkv` and `.avi` are detected but usually cannot be decoded — the error says so explicitly.
+
+Anything unrecognised gets a clean download card rather than a broken view.
+
+## A note on Office fidelity
+
+`.doc`, `.docx` and `.pptx` are converted **in the browser**, so nothing leaves the reader's
+machine — but they are not pixel-accurate.
+
+- **Word (`.docx`)** becomes clean semantic HTML: headings, tables, bold and italic, inline
+  images. Page geometry, headers and footers, columns and text boxes are dropped.
+- **Legacy Word (`.doc`)** is not a zipped XML package but an OLE2 container of binary
+  records, so it has its own built-in reader. It recovers **text only** — paragraphs, tables
+  and field results, with no formatting. Table structure is inferred from Word's cell marks,
+  which is exact for ordinary tables and approximate for merged layouts.
+- **PowerPoint (`.pptx`)** gives you text, images and presenter notes, not slide layout,
+  theming, animation or SmartArt.
+
+<Aside type="caution" title="When layout matters">
+  If the file sits at a **public URL**, the toolbar offers *Open in Microsoft Office viewer*,
+  which renders it server-side at full fidelity. That sends the URL to Microsoft, so it is
+  always an explicit click — never automatic. Turn it off entirely with
+  `configure({ officeViewer: false })`.
+</Aside>
+
+## Legacy spreadsheets
+
+Modern `.xlsx` and `.xlsm` work with **zero extra dependencies** — the library includes a
+native OpenXML parser that reads cell values, shared strings and dates. Binary `.xls` and
+OpenDocument `.ods` are different formats; see
+[configuration](/fileon/reference/configuration/#legacy-spreadsheets) to enable them.

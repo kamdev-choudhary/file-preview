@@ -6,3 +6,6 @@
  * demo is built by Vite and can.
  */
 /// <reference types="vite/client" />
+
+/** Injected by `define` in vite.config.ts so the nav can show the real version. */
+declare const __APP_VERSION__: string;

@@ -1,0 +1,163 @@
+/*
+ * Starlight retheme.
+ *
+ * The palette is a spectrum rather than a single accent, because that is what
+ * the library does: it takes a dozen unrelated file formats and gives them one
+ * consistent reading surface. Each format category owns a hue, and those hues
+ * are the brand — on the format grid, the extension chips and the code
+ * highlighting. Electric indigo leads; the rest support it.
+ */
+
+:root {
+  --fo-indigo: #5b3df5;
+  --fo-indigo-lift: #7c62ff;
+  --fo-jade: #00a98f;
+  --fo-magenta: #e6367a;
+  --fo-amber: #f59e0b;
+  --fo-azure: #2e7df7;
+  --fo-orchid: #9333ea;
+  --fo-slate: #64748b;
+
+  --fo-display: 'Bricolage Grotesque', 'Instrument Sans', system-ui, sans-serif;
+  --fo-sans: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --fo-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --sl-font: var(--fo-sans);
+  --sl-font-mono: var(--fo-mono);
+}
+
+/* ---- dark, which is Starlight's default ------------------------------- */
+
+:root {
+  --fo-bg: #0b0a14;
+  --fo-surface: #13121f;
+  --fo-raised: #191827;
+  --fo-line: #272437;
+  --fo-ink: #ecebf5;
+  --fo-dim: #a5a2bd;
+  --fo-faint: #74718f;
+
+  --cat-doc: #9b86ff;
+  --cat-sheet: #2ee0bf;
+  --cat-image: #ff6fa3;
+  --cat-media: #fbbf4a;
+  --cat-code: #6fa5ff;
+  --cat-archive: #99a3bb;
+  --cat-font: #c084fc;
+
+  --sl-color-accent-low: #241a4d;
+  --sl-color-accent: var(--fo-indigo);
+  --sl-color-accent-high: #c3b5ff;
+  --sl-color-white: #ffffff;
+  --sl-color-gray-1: #edecf6;
+  --sl-color-gray-2: #c6c4d8;
+  --sl-color-gray-3: #908da8;
+  --sl-color-gray-4: #5d5a75;
+  --sl-color-gray-5: #3b3851;
+  --sl-color-gray-6: #272437;
+  --sl-color-gray-7: #1a1828;
+  --sl-color-black: #0b0a14;
+
+  --sl-color-bg: var(--fo-bg);
+  --sl-color-bg-nav: color-mix(in srgb, var(--fo-bg) 82%, transparent);
+  --sl-color-bg-sidebar: var(--fo-bg);
+  --sl-color-bg-inline-code: #221f36;
+  --sl-color-text-accent: #b3a2ff;
+  --sl-color-hairline-light: #2b2840;
+  --sl-color-hairline: #211f33;
+  --sl-color-hairline-shade: #17162450;
+}
+
+/* ---- light ------------------------------------------------------------ */
+
+:root[data-theme='light'] {
+  --fo-bg: #fbfaff;
+  --fo-surface: #ffffff;
+  --fo-raised: #f4f2fd;
+  --fo-line: #e6e3f5;
+  --fo-ink: #141327;
+  --fo-dim: #55527a;
+  --fo-faint: #8b88a8;
+
+  --cat-doc: #5b3df5;
+  --cat-sheet: #00886f;
+  --cat-image: #d12366;
+  --cat-media: #b26206;
+  --cat-code: #1d63d8;
+  --cat-archive: #55607a;
+  --cat-font: #8126d8;
+
+  --sl-color-accent-low: #e5dfff;
+  --sl-color-accent: var(--fo-indigo);
+  --sl-color-accent-high: #2c1a7a;
+  --sl-color-white: #141327;
+  --sl-color-gray-1: #1f1d34;
+  --sl-color-gray-2: #403d5e;
+  --sl-color-gray-3: #6b6889;
+  --sl-color-gray-4: #918ead;
+  --sl-color-gray-5: #c9c6dd;
+  --sl-color-gray-6: #e6e3f5;
+  --sl-color-gray-7: #f2f0fb;
+  --sl-color-black: #fbfaff;
+
+  --sl-color-bg: var(--fo-bg);
+  --sl-color-bg-nav: color-mix(in srgb, var(--fo-bg) 82%, transparent);
+  --sl-color-bg-sidebar: var(--fo-bg);
+  --sl-color-bg-inline-code: #efecfd;
+  --sl-color-text-accent: #4a2ee0;
+  --sl-color-hairline-light: #e6e3f5;
+  --sl-color-hairline: #edeaf9;
+  --sl-color-hairline-shade: #e6e3f580;
+}
+
+/* ---- typography -------------------------------------------------------- */
+
+.sl-markdown-content h1,
+.sl-markdown-content h2,
+.sl-markdown-content h3,
+.sl-markdown-content h4,
+.content-panel h1,
+.site-title {
+  font-family: var(--fo-display);
+  letter-spacing: -0.028em;
+}
+
+.sl-markdown-content h2 {
+  margin-top: 2.2em;
+  padding-top: 0.9em;
+  border-top: 1px solid var(--sl-color-hairline-light);
+}
+
+.site-title {
+  font-weight: 700;
+  font-size: 1.15rem;
+}
+
+header.header {
+  backdrop-filter: blur(14px) saturate(1.5);
+}
+
+/* An inline-code style that reads as a token rather than a grey box. */
+.sl-markdown-content
+  :not(pre, h1, h2, h3, h4, h5, h6, .not-content *, .code *)
+  > code:not(:where(.not-content *)) {
+  color: var(--sl-color-text-accent);
+  border: 1px solid color-mix(in srgb, var(--fo-indigo) 22%, transparent);
+  padding: 0.12em 0.38em;
+  font-weight: 500;
+}
+
+/* ---- the version badge in the header ---------------------------------- */
+
+.fo-ver {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--fo-jade) 18%, transparent);
+  color: color-mix(in srgb, var(--fo-jade) 90%, var(--fo-ink));
+  font-family: var(--fo-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  vertical-align: middle;
+}

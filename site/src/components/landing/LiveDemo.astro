@@ -1,0 +1,25 @@
+---
+import Chip from './Chip.astro';
+import { INLINE_SET, extOf } from '../../data/formats';
+---
+
+<section class="fo-band">
+  <div class="fo-band-head">
+    <h2>The same component, inline</h2>
+    <p>
+      Embedded in a page instead of a modal. The toolbar changes to match whatever the active
+      viewer supports — page controls for a PDF, sheet tabs for a workbook, zoom for an image.
+      Each viewer is a separate chunk that arrives only when it is first needed.
+    </p>
+  </div>
+
+  <div class="fo-chipline" id="inline-chips">
+    {
+      INLINE_SET.map((s, i) => (
+        <Chip ext={extOf(s.file)} label={s.label} cat={s.cat} file={s.file} active={i === 0} />
+      ))
+    }
+  </div>
+
+  <file-preview id="inline" bordered style="--fp-min-height: 500px"></file-preview>
+</section>

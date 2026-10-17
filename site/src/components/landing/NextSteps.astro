@@ -1,0 +1,59 @@
+---
+const base = import.meta.env.BASE_URL;
+const LINKS = [
+  {
+    href: `${base}guides/install/`,
+    cat: 'doc',
+    title: 'Install',
+    note: 'npm, or a single script tag from a CDN with no build step.',
+  },
+  {
+    href: `${base}guides/quick-start/`,
+    cat: 'code',
+    title: 'Quick start',
+    note: 'Open the modal, render inline, drive a gallery from your own UI.',
+  },
+  {
+    href: `${base}guides/frameworks/`,
+    cat: 'sheet',
+    title: 'Frameworks',
+    note: 'React, Vue, Svelte and Angular — no wrapper package needed.',
+  },
+  {
+    href: `${base}reference/configuration/`,
+    cat: 'image',
+    title: 'Configuration',
+    note: 'Size limits, pdf.js assets, request headers, legacy spreadsheets.',
+  },
+  {
+    href: `${base}reference/errors/`,
+    cat: 'media',
+    title: 'Errors',
+    note: 'Ten stable codes, so you branch on cause instead of message text.',
+  },
+  {
+    href: `${base}reference/custom-viewers/`,
+    cat: 'font',
+    title: 'Custom viewers',
+    note: 'Teach it a new format, or take over one of the built-ins.',
+  },
+];
+---
+
+<section class="fo-band" id="docs">
+  <div class="fo-band-head">
+    <h2>Read the documentation</h2>
+    <p>Every option, event and error code, with the snippet you need next to it.</p>
+  </div>
+
+  <div class="fo-next">
+    {
+      LINKS.map((link) => (
+        <a class="fo-next-card" href={link.href} data-cat={link.cat}>
+          <span class="fo-next-title">{link.title}</span>
+          <span class="fo-next-note">{link.note}</span>
+        </a>
+      ))
+    }
+  </div>
+</section>

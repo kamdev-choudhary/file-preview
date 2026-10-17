@@ -1,0 +1,66 @@
+---
+title: Install
+description: Add fileon with npm, or load it straight from a CDN with no build step.
+---
+
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+The package is ESM-only and ships its own TypeScript types. There is no CSS file to import —
+the component carries its styles inside its shadow root.
+
+<Tabs syncKey="pm">
+<TabItem label="npm">
+
+```sh
+npm i fileon
+```
+
+</TabItem>
+<TabItem label="pnpm">
+
+```sh
+pnpm add fileon
+```
+
+</TabItem>
+<TabItem label="yarn">
+
+```sh
+yarn add fileon
+```
+
+</TabItem>
+<TabItem label="bun">
+
+```sh
+bun add fileon
+```
+
+</TabItem>
+</Tabs>
+
+## Without a bundler
+
+A single module script is enough. This registers the elements and gives you a working viewer
+on a static page.
+
+```html
+<script type="module" src="https://cdn.jsdelivr.net/npm/fileon/+esm"></script>
+
+<file-preview src="/report.pdf" bordered></file-preview>
+```
+
+## What gets downloaded
+
+The entry is about **17 kB gzipped**. Every viewer beyond that is a separate chunk loaded on
+first use, so a page that only ever previews images never downloads pdf.js, mammoth or JSZip.
+
+<Aside type="tip" title="Check it yourself">
+  Open the network panel on the [home page](/fileon/) and click through the sample files. Each
+  new format pulls exactly one new chunk.
+</Aside>
+
+## Browser support
+
+Any browser with ES modules, custom elements and shadow DOM — so current Chrome, Edge, Firefox
+and Safari. There is no IE or legacy Edge support, and none is planned.

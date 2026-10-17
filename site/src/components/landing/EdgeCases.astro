@@ -1,0 +1,42 @@
+---
+const EDGES = [
+  { id: 'notfound', label: '404 Not Found', note: 'HTTP error, offers retry and download' },
+  { id: 'cors', label: 'Cross-origin blocked', note: 'CORS, offers opening in a new tab' },
+  { id: 'unsupported', label: 'No viewer for this type', note: 'Falls back to a download card' },
+  { id: 'corrupt', label: 'Corrupt PDF', note: 'Decode error, says what failed' },
+  { id: 'mislabelled', label: 'Mislabelled file', note: 'A PNG named .txt still renders' },
+  { id: 'empty', label: 'Empty file', note: 'Zero bytes, says so rather than hanging' },
+];
+---
+
+<section class="fo-band" id="edges">
+  <div class="fo-band-head">
+    <h2>When things go wrong</h2>
+    <p>
+      A preview component spends much of its life handling files that are missing, corrupt,
+      blocked or mislabelled. These all fail on purpose — open them and watch what the reader is
+      told, and what the event log records.
+    </p>
+  </div>
+
+  <div class="fo-edge-layout">
+    <div class="fo-edge-grid">
+      {
+        EDGES.map((edge) => (
+          <button type="button" class="fo-edge" data-edge={edge.id}>
+            <span class="fo-edge-title">{edge.label}</span>
+            <span class="fo-edge-note">{edge.note}</span>
+          </button>
+        ))
+      }
+    </div>
+
+    <div class="fo-logwrap">
+      <div class="fo-log-head">
+        <span>Event log</span>
+        <button class="fo-copy fo-ghost" type="button" id="log-clear">Clear</button>
+      </div>
+      <pre class="fo-log" id="log">Waiting for events…</pre>
+    </div>
+  </div>
+</section>

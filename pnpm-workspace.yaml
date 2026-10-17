@@ -1,9 +1,15 @@
 # pnpm 12 reads its settings from here rather than package.json's "pnpm" field.
 
+# The library is the root package; the documentation site is its own package so
+# Astro's dependency tree never leaks into what gets published to npm.
+packages:
+  - site
+
 # Only these packages may run install scripts. Everything else is blocked, so a
 # compromised transitive dependency cannot execute code at install time.
 onlyBuiltDependencies:
   - esbuild
+  - sharp
 
 # Keep peer dependency auto-installation off for clean builds.
 autoInstallPeers: false

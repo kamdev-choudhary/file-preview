@@ -1,0 +1,49 @@
+---
+import Chip from './Chip.astro';
+import { SAMPLES, extOf } from '../../data/formats';
+---
+
+<section class="fo-hero">
+  <div class="fo-hero-copy">
+    <h1>Preview any file,<br />right where it lives.</h1>
+    <p class="fo-lede">
+      One custom element renders PDFs, Word and PowerPoint documents, spreadsheets, images,
+      video, code and archives — in the browser, with no upload and no server. It works in plain
+      HTML and in every framework, because it is only a custom element.
+    </p>
+    <div class="fo-stats">
+      <span><strong>17 kB</strong> entry, gzipped</span>
+      <span><strong>60+</strong> formats</span>
+      <span><strong>0</strong> framework dependencies</span>
+    </div>
+  </div>
+
+  <!-- The product's defining moment is "drop a file, see it render", so that
+       is the hero rather than a picture of one. -->
+  <div class="fo-try" id="try">
+    <div class="fo-zone" id="try-zone">
+      <input type="file" id="file-input" multiple class="fo-hidden" />
+      <p class="fo-zone-head">Drop a file to preview it</p>
+      <p class="fo-zone-sub">
+        Nothing is uploaded. Everything here runs in this tab, on your file.
+      </p>
+      <button class="fo-btn fo-btn-primary" id="pick" type="button">Choose a file</button>
+    </div>
+
+    <div class="fo-try-samples">
+      <span class="fo-try-label">or open a sample</span>
+      <div class="fo-chipline">
+        {
+          SAMPLES.map((s, i) => (
+            <Chip ext={extOf(s.file)} label={s.label} cat={s.cat} file={s.file} index={i} />
+          ))
+        }
+      </div>
+    </div>
+  </div>
+
+  <div class="fo-install">
+    <code>npm i fileon</code>
+    <button class="fo-copy" type="button" data-copy="npm i fileon">Copy</button>
+  </div>
+</section>
